@@ -1,0 +1,5 @@
+red 235 51 36
+blue 50 130 246
+green 34 177 76
+yellow 232 218 0
+colorkey-magenta 239 56 255
