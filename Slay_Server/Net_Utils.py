@@ -10,18 +10,6 @@ def send_message(socket,msg):
     time.sleep(0.1)
     return
 
-'''def recieve_message(socket):
-    full_msg = b''
-    new_msg = True
-    while True:
-        msg = socket.recv(16)
-        if new_msg:
-            msglen = int(msg[:HEADERSIZE])
-            new_msg = False
-        full_msg += msg
-        if len(full_msg)-HEADERSIZE >= msglen: break
-    return pickle.loads(full_msg[HEADERSIZE:])'''
-
 def recieve_message(socket):
     msglen = int(socket.recv(HEADERSIZE))
     msg = pickle.loads(socket.recv(msglen))
