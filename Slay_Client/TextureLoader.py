@@ -41,8 +41,12 @@ entities.append(
 entities.append(
     pygame.image.load('./Slay_Assets/spearman.png').convert_alpha()
 )
-entities.append(0) # Knight
-entities.append(0) # Baron
+entities.append(
+    pygame.image.load('./Slay_Assets/baron.png').convert_alpha()
+)
+entities.append(
+    pygame.image.load('./Slay_Assets/knight.png').convert_alpha()
+)
 
 
 #load buttons

@@ -11,11 +11,11 @@ Port = 4444
 
 # Map size in number of cells, too many the window might be too big
 # Also larger maps take much longer to generate
-MapXSize = 10
-MapYSize = 10
+MapXSize = 15
+MapYSize = 15
 
 # Number of players needed for the game
-NumberOfPlayers = 1
+NumberOfPlayers = 2
 
 [ADVANCED]
 # Dont touch unless you know what you're doing
@@ -48,5 +48,5 @@ TOWER = 4
 CITY = 5
 MAN = 6
 SPEARMAN = 7
-KNIGHT = 8
-BARON = 9
+BARON = 8
+KNIGHT = 9
