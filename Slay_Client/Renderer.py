@@ -14,8 +14,8 @@ def reset_renderer():
     roboto = pygame.font.Font('./Slay_Assets/RobotoMono-VariableFont_wght.ttf',13)
     roboto_heading.set_bold(True)
 
-def center(text):
-    dimensions = roboto_heading.size(text)
+def center(text,font):
+    dimensions = font.size(text)
     return (200-dimensions[0])/2
 
 def drawBaseLayer(screen :pygame.Surface,WINDOWX,WINDOWY):
@@ -25,17 +25,22 @@ def drawBaseLayer(screen :pygame.Surface,WINDOWX,WINDOWY):
 
 def drawShopWindow(screen,WINDOWX,gold):
 
-    screen.blit(roboto_heading.render('BUY',True,(0,0,0)),(WINDOWX+center('BUY'),55))
+    screen.blit(roboto_heading.render('BUY',True,(0,0,0)),(WINDOWX+center('BUY',roboto_heading),55))
+    height = 55
+
+    if gold < 10:
+        screen.blit(roboto.render('Cannot Afford Anything',True,(0,0,0)),(WINDOWX+center('Cannot Afford Anything',roboto),80))
+        return height + 5
+
+
     screen.blit(roboto.render('Cost',True,(0,0,0)),(WINDOWX+85,80))
     screen.blit(roboto.render('Wage',True,(0,0,0)),(WINDOWX+135,80))
-    height = 30
 
     if gold >= 10:
         screen.blit(entities[MAN],(WINDOWX+23,95))
         screen.blit(roboto.render('10',True,(0,0,0)),(WINDOWX+90,110))
         screen.blit(roboto.render('2',True,(0,0,0)),(WINDOWX+140,110))
         height += 40
-        height += 25
 
     if gold >= 20:
         screen.blit(entities[SPEARMAN],(WINDOWX+23,135))
@@ -60,7 +65,7 @@ def drawShopWindow(screen,WINDOWX,gold):
 def drawSideBar(screen :pygame.Surface,grid,selected,turn,WINDOWX,WINDOWY):
 
     #Status line    
-    screen.blit(roboto_heading.render('Waiting for server',True,(0,0,0)),(WINDOWX+center('Waiting for server'),15))
+    screen.blit(roboto_heading.render('Waiting for server',True,(0,0,0)),(WINDOWX+center('Waiting for server',roboto_heading),15))
     screen.fill((0,0,0),pygame.Rect(WINDOWX+20,45,160,2))
 
     #End Turn button
@@ -68,13 +73,13 @@ def drawSideBar(screen :pygame.Surface,grid,selected,turn,WINDOWX,WINDOWY):
 
     #Shop window and finances
     if selected is None:
-        screen.blit(roboto_heading.render('No State Selected',True,(0,0,0)),(WINDOWX+center('No State Selected'),60))
+        screen.blit(roboto_heading.render('No State Selected',True,(0,0,0)),(WINDOWX+center('No State Selected',roboto_heading),60))
         return
 
     offset = drawShopWindow(screen,WINDOWX,grid[selected[0]][selected[1]].gold)
 
     screen.fill((0,0,0),pygame.Rect(WINDOWX+20,offset+45,160,2)) 
-    screen.blit(roboto_heading.render('Finances',True,(0,0,0)),(WINDOWX+center('Finances'),offset+60))
+    screen.blit(roboto_heading.render('Finances',True,(0,0,0)),(WINDOWX+center('Finances',roboto_heading),offset+60))
 
     screen.blit(roboto.render(f'Savings{grid[selected[0]][selected[1]].gold:>12}',True,(0,0,0)),(WINDOWX+25,offset+80))
     screen.blit(roboto.render(f'Wages{("-"+str(grid[selected[0]][selected[1]].wages)):>14}',True,(0,0,0)),(WINDOWX+25,offset+100))
