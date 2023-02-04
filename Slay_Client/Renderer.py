@@ -1,6 +1,5 @@
 from TextureLoader import *
 from Constants import *
-from math import floor
 import pygame
 
 roboto = None
