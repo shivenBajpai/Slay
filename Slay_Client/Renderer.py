@@ -5,9 +5,11 @@ import pygame
 
 roboto = None
 roboto_heading = None
+end_button_rect = None
 
-def reset_renderer():
-    global roboto, roboto_heading
+def reset_renderer(WINDOWX,WINDOWY):
+    global roboto, roboto_heading, end_button_rect
+    end_button_rect = pygame.Rect((WINDOWX + 33,WINDOWY-50),(134,33))
     if not pygame.font.get_init(): pygame.font.init()
     roboto_heading = pygame.font.Font('./Slay_Assets/RobotoMono-VariableFont_wght.ttf',15)
     roboto_heading.set_bold(True)
@@ -64,12 +66,19 @@ def drawShopWindow(screen,WINDOWX,gold):
 
 def drawSideBar(screen :pygame.Surface,grid,selected,turn,WINDOWX,WINDOWY):
 
+    global end_button_rect
+
     #Status line    
     screen.blit(roboto_heading.render('Waiting for server',True,(0,0,0)),(WINDOWX+center('Waiting for server',roboto_heading),15))
     screen.fill((0,0,0),pygame.Rect(WINDOWX+20,45,160,2))
 
     #End Turn button
-    screen.blit(buttons[0],(WINDOWX + 33,WINDOWY-50))
+    if not turn:
+        screen.blit(buttons[0][2],(WINDOWX + 33,WINDOWY-50))
+    else:
+        if end_button_rect.collidepoint(pygame.mouse.get_pos()): screen.blit(buttons[0][1],(WINDOWX + 33,WINDOWY-50))
+        else: screen.blit(buttons[0][0],(WINDOWX + 33,WINDOWY-50))
+
 
     #Shop window and finances
     if selected is None:

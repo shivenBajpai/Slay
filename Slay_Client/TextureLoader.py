@@ -50,6 +50,8 @@ entities.append(
 
 
 #load buttons
-buttons.append(
-    pygame.image.load('./Slay_Assets/end_turn.png').convert_alpha()
-)
+buttons.append([
+    pygame.image.load('./Slay_Assets/end_turn.png').convert_alpha(),
+    pygame.image.load('./Slay_Assets/end_turn_hover.png').convert_alpha(),
+    pygame.image.load('./Slay_Assets/end_turn_disabled.png').convert_alpha()
+])

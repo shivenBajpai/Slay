@@ -28,7 +28,7 @@ def main(grid,color,config):
     state = {}
     beat = 0
     reset_move_utils(WINDOWX,WINDOWY)
-    reset_renderer()
+    reset_renderer(WINDOWX,WINDOWY)
 
     try:
         while running:
@@ -46,7 +46,7 @@ def main(grid,color,config):
             drawBaseLayer(screen,WINDOWX,WINDOWY)
             drawMapLayer(screen, grid, floor(beat/2)%2==0)
             drawEntities(screen, grid, floor(beat/2)%2==0)
-            drawSideBar(screen, grid, get_selected_city(), 0, WINDOWX, WINDOWY)
+            drawSideBar(screen, grid, get_selected_city(), is_our_turn(), WINDOWX, WINDOWY)
             drawMouseEntity(screen, get_mouse_entity(), pygame.mouse.get_pos())
 
             for index, animation in enumerate(animations):
