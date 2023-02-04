@@ -69,8 +69,10 @@ status = StringVar()
 
 ttk.Label(mainframe,text='Enter IP: ',padding='45 0 0 0').grid(column=1,row=2,columnspan=2,sticky=(E))
 ttk.Entry(mainframe,textvariable=ip_field,width=30).grid(column=3,row=2,columnspan=2,sticky=(W))
+ip_field.set('127.0.0.1')
 ttk.Label(mainframe,text='Port: ',padding='5 0 0 0').grid(column=5,row=2,sticky=(W))
 ttk.Entry(mainframe,textvariable=port_field,width=7).grid(column=6,row=2,sticky=(E))
+port_field.set(4444)
 ttk.Label(mainframe,text='',padding='0 0 15 15').grid(column=7,row=2)
 
 connectButton = ttk.Button(mainframe, text="Connect", command=run, padding='0 2 0 2',width=30)

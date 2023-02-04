@@ -69,9 +69,6 @@ def disconnect():
 def declareExit():
     send_message(client,Packet(Packet.LEAVE))
 
-def send_move():
-    pass
-
 def is_our_turn():
     return our_turn
 
@@ -93,9 +90,10 @@ def network(moves,grid,state,animations,color):
         elif pack.code == Packet.UPDATE:
             if pack.data.metadata['source'] != color: 
                 move = pack.data
-                move.animation.prepare()
                 move.preanimation.apply(grid,state)
-                animations.append(move)
+                if move.animation is not None:
+                    move.animation.prepare()
+                    animations.append(move)
 
         elif pack.code == Packet.PLAY:
             print('DEBUG: Permission to play')
@@ -110,7 +108,7 @@ def network(moves,grid,state,animations,color):
     except (ConnectionAbortedError,ConnectionResetError): raise GameEndingException('Server terminated connection,\nNo context')
 
     if len(moves) != 0:
-        print(moves)
-        send_message(client,Packet(Packet.MOVE,moves[0]))
+        if moves[0].__class__ == str: send_message(client,Packet(Packet.END_TURN))  
+        else: send_message(client,Packet(Packet.MOVE,moves[0]))
         our_turn=False
         del moves[0]

@@ -121,8 +121,8 @@ def createGrid():
                 if len(ally_neighbours) > 1:
                     grid[x][y].hall_flag = True
                     grid[x][y].entity = CITY
-                    grid[x][y].blink = True
                     grid[x][y].hall_loc = (x,y)
+                    grid[x][y].gold = 50
 
                     # add to hall count
                     hall_count[grid[x][y].color-1] += 1
@@ -135,11 +135,12 @@ def createGrid():
 
                     # configure said cells
                     grid[x][y].land = land
+                    grid[x][y].income = len(land)
+                    grid[x][y].wages = 0
+                    grid[x][y].net = grid[x][y].gold + grid[x][y].income 
                     for ally in land:
                         grid[ally[0]][ally[1]].hall_flag = True
-                        grid[ally[0]][ally[1]].hall_loc = (x,y)
-                    
-        grid[2][2].entity = SPEARMAN            
+                        grid[ally[0]][ally[1]].hall_loc = (x,y)    
 
         if max(hall_count) - min(hall_count) > 1: continue
         if min(hall_count) == 0: continue

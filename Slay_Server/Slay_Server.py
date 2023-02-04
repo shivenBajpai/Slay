@@ -6,7 +6,8 @@ from Hex_Utils import *
 clients = []
 
 # Prepare for game
-grid = createGrid()
+serverside_grid = createGrid()
+severside_state = {}
 turn = 0
 
 server_socket = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
@@ -32,7 +33,7 @@ while True:
 for addr in connections:
     send_message(connections[addr],Packet(
         Packet.LOAD,
-        {'grid':grid}
+        {'grid':serverside_grid}
     ))
     connections[addr].settimeout(0.1)
 
@@ -54,8 +55,7 @@ try:
                         raise PlayerDisconnectException(addr)
 
                     elif pack.code == Packet.MOVE:
-
-                        print('recieved move')
+                        print(f'recieved move from {addr}')
                         if list(connections.keys()).index(addr) == turn:
                             for addr,conn in connections.items():
                                 send_message(conn,Packet(
@@ -63,13 +63,26 @@ try:
                                     pack.data
                                 ))
 
-                            #time.sleep(0.1)
-                            turn += 1
-                            if turn == len(connections): turn = 0
+                            pack.data.preanimation.apply(serverside_grid,severside_state)
+                            pack.data.postanimation.apply(serverside_grid,severside_state)
 
                             send_message(list(connections.values())[turn],Packet(Packet.PLAY))
                         else: 
                             print('Attempted play out of turn')
+
+                    elif pack.code == Packet.END_TURN:
+                        print(f'recieved turn end from {addr}')
+                        if list(connections.keys()).index(addr) == turn:
+
+                            turn += 1
+                            if turn == len(connections): 
+                                turn = 0
+                                # TODO: serverside updates
+
+                            send_message(list(connections.values())[turn],Packet(Packet.PLAY))
+                        else: 
+                            print('Attempted end out of turn')
+
                     else: 
                         print(f'invalid Packet by {addr}',pack.code,pack.data)
 

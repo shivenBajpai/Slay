@@ -25,8 +25,8 @@ class Packet:
     PING = 4    # Ping Request
     PLAY = 5    # Instruct client to play
     MOVE = 6    # Move from player
-    ERROR = 7   # Serverside Error, Command to terminate connection + context (from server only)
-    FULL = 8    # Deny connection, party full (REDUNDANT, never sent)
+    END_TURN = 7 # Indicate end of turn
+    ERROR = 8   # Serverside Error, Command to terminate connection + context (from server only)
     LEAVE = 9       # Indicate termination of connection + context (from client only)
     DISCONNECT = 10 # Command to terminate connection + context (from server only)
 

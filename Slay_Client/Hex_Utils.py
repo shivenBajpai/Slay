@@ -1,6 +1,7 @@
 import math
 import pygame
 from Constants import *
+import random
 
 xsize, ysize = None, None
 
@@ -12,6 +13,7 @@ class Hex:
         self.selected = False
         self.entity = 0
         self.hall_flag = False
+        self.hall_loc = None
         self.land = []
         pass
 
@@ -32,8 +34,8 @@ def cursor_on_grid(old_pos):
         else: x,y =x2,y2
     elif x1 is None: x,y =x2,y2
     else: x,y =x1,y1
-    if x>xsize-1 or y>ysize-1 or x<0 or y<0: return old_pos
-    return (x,y)
+    if x>xsize-1 or y>ysize-1 or x<0 or y<0: return old_pos, False
+    return (x,y), True
 
 def neighbours(x,y,distance):
     if distance==1:
@@ -63,15 +65,15 @@ def verify(array):
 
 #TODO: Remove aggregate functions if not used anywhere
 
-def color_aggregate(x,y,land,grid):
-    new = []
+def color_aggregate(x,y,land,new,grid):
+    new_this_call = []
     for neighbour in verify(neighbours(x,y,1)):
-        if grid[neighbour[0]][neighbour[1]].color == grid[x][y].color and neighbour not in land:
-            land.append(neighbour)
+        if grid[neighbour[0]][neighbour[1]].color == grid[x][y].color and neighbour not in land and neighbour not in new:
             new.append(neighbour)
+            new_this_call.append(neighbour)
 
-    for neighbour in new:
-        color_aggregate(neighbour[0],neighbour[1],land,grid)
+    for neighbour in new_this_call:
+        color_aggregate(neighbour[0],neighbour[1],land,new,grid)
 
     return
 
@@ -98,8 +100,7 @@ def getValidMoves(pos,grid,color,level):
         if not grid[location[0]][location[1]].terrain: continue
 
         if grid[location[0]][location[1]].color == color: 
-            if location in city_land and grid[location[0]][location[1]].entity < TOWER:
-                #print('appending location: allied',location[0],location[1])
+            if location in city_land and grid[location[0]][location[1]].entity < TOWER or (grid[location[0]][location[1]].entity == level and level<KNIGHT):
                 valid.append(location)
 
         else:
@@ -109,9 +110,70 @@ def getValidMoves(pos,grid,color,level):
 
                 if neighbour in city_land:
                     valid.append(location)
-                    #print('appending foreign:',location,'due to neighbour',neighbour)
                     break
 
     valid.append(pos)
 
     return set(valid)
+
+def getValidPlacementSpots(hall_pos,grid,level):
+    valid = grid[hall_pos[0]][hall_pos[1]].land.copy()
+    for loc in valid:
+        if grid[loc[0]][loc[1]].entity > GRAVE:
+            if level < KNIGHT and grid[loc[0]][loc[1]].entity == level: continue
+            valid.remove(loc)
+
+    # TODO: add valid bordering enemy positions
+    return valid
+
+def GetConnectingTerritories(mouse_pos,grid,color,selected_city):
+    connecting = []
+    for cell in verify(neighbours(mouse_pos[0],mouse_pos[1],1)):
+        if (grid[cell[0]][cell[1]].color != color): continue
+        if (cell in grid[selected_city[0]][selected_city[1]].land): continue
+        if (grid[cell[0]][cell[1]].hall_loc is not None): connecting.append(cell)
+
+    return connecting
+
+def convertCity(grid,joining_city,selected_city):
+    for cell in grid[joining_city[0]][joining_city[1]].land:
+        grid[cell[0]][cell[1]].hall_loc = selected_city
+
+    grid[selected_city[0]][selected_city[1]].wages += grid[joining_city[0]][joining_city[1]].wages
+    grid[selected_city[0]][selected_city[1]].income += grid[joining_city[0]][joining_city[1]].income
+    grid[selected_city[0]][selected_city[1]].net += grid[joining_city[0]][joining_city[1]].net
+    grid[selected_city[0]][selected_city[1]].gold += grid[joining_city[0]][joining_city[1]].gold
+    grid[selected_city[0]][selected_city[1]].land += grid[joining_city[0]][joining_city[1]].land
+
+    grid[joining_city[0]][joining_city[1]].wages = None
+    grid[joining_city[0]][joining_city[1]].income = None
+    grid[joining_city[0]][joining_city[1]].net = None
+    grid[joining_city[0]][joining_city[1]].gold = None
+    grid[joining_city[0]][joining_city[1]].land = []
+    grid[joining_city[0]][joining_city[1]].entity = 0
+
+def moveHall(grid,old_pos):
+    land = grid[old_pos[0]][old_pos[1]].land.copy()
+    land.remove(old_pos)
+
+    if len(land) < 3: 
+        for cell in land:
+            grid[cell[0]][cell[1]].hall_loc = None
+        return land
+
+    while True:
+        rng = land[random.randint(0,len(land)-1)]
+        if grid[rng[0]][rng[1]].entity < TOWER:
+            grid[rng[0]][rng[1]].entity = CITY
+            grid[rng[0]][rng[1]].land = land
+            grid[rng[0]][rng[1]].wages = grid[old_pos[0]][old_pos[1]].wages
+            grid[rng[0]][rng[1]].income = grid[old_pos[0]][old_pos[1]].income - 1
+            grid[rng[0]][rng[1]].net = grid[old_pos[0]][old_pos[1]].net - 1 - grid[old_pos[0]][old_pos[1]].gold
+            grid[rng[0]][rng[1]].gold = 0
+            
+            for cell in land:
+                grid[cell[0]][cell[1]].hall_loc = rng
+            break
+
+    return land
+
