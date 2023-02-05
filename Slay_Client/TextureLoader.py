@@ -34,7 +34,7 @@ entities.append(
 entities.append(0) #Palm
 entities.append(0) #Grave
 entities.append(
-    pygame.image.load('./Slay_Assets/outpost.png').convert_alpha()
+    pygame.image.load('./Slay_Assets/tower.png').convert_alpha()
 )
 entities.append(
     pygame.image.load('./Slay_Assets/city.png').convert_alpha()
