@@ -111,7 +111,7 @@ def network(moves,grid,animations,color):
             send_message(client,Packet(Packet.LEAVE,{'cause':'Invalid server Response'}))
             client.close()
 
-    except TimeoutError: pass
+    except (TimeoutError,socket.timeout): pass
     except (ConnectionAbortedError,ConnectionResetError): raise GameEndingException('Server terminated connection,\nNo context')
 
     if len(moves) != 0:
