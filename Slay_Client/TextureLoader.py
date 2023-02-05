@@ -28,10 +28,14 @@ cells.append([
 
 #load entites
 entities.append(0) #Placeholder
-entities.append(0) #Tree
+entities.append(
+    pygame.image.load('./Slay_Assets/tree.png').convert_alpha()
+)
 entities.append(0) #Palm
 entities.append(0) #Grave
-entities.append(0) #Tower
+entities.append(
+    pygame.image.load('./Slay_Assets/outpost.png').convert_alpha()
+)
 entities.append(
     pygame.image.load('./Slay_Assets/city.png').convert_alpha()
 )
