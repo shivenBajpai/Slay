@@ -7,8 +7,7 @@ clients = []
 
 # Prepare for game
 serverside_grid = createGrid()
-severside_state = {}
-turn = 0
+turn = 0 # Corresponds to index in connections list of player whose turn it is. Does not match with client-side variable turn
 
 server_socket = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
 server_socket.bind((IP,PORT))
@@ -39,7 +38,11 @@ for addr in connections:
 
 try:
 
-    send_message(list(connections.values())[turn],Packet(Packet.PLAY))
+    for addr,conn in connections.items():
+        send_message(conn,Packet(
+            Packet.PLAY,
+            {'turn':turn+1}    
+        ))
 
     while True:
             for addr, conn in connections.items():
@@ -62,11 +65,13 @@ try:
                                     Packet.UPDATE,
                                     pack.data
                                 ))
+                                send_message(conn,Packet(
+                                    Packet.PLAY,
+                                    {'turn':turn+1}    
+                                ))
 
-                            pack.data.preanimation.apply(serverside_grid,severside_state)
-                            pack.data.postanimation.apply(serverside_grid,severside_state)
-
-                            send_message(list(connections.values())[turn],Packet(Packet.PLAY))
+                            pack.data.preanimation.apply(serverside_grid)
+                            pack.data.postanimation.apply(serverside_grid)
                         else: 
                             print('Attempted play out of turn')
 
@@ -79,7 +84,11 @@ try:
                                 turn = 0
                                 # TODO: serverside updates
 
-                            send_message(list(connections.values())[turn],Packet(Packet.PLAY))
+                            for addr,conn in connections.items():
+                                send_message(conn,Packet(
+                                    Packet.PLAY,
+                                    {'turn':turn+1}    
+                                ))
                         else: 
                             print('Attempted end out of turn')
 

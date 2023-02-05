@@ -1,7 +1,8 @@
 from Net_Utils import *
 import socket
 
-our_turn = False
+turn = 0 # corresponds to color/userid whose turn it is. This is not the same as serverside variable turn
+color = 0
 client = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
 
 class GameEndingException(Exception): ...
@@ -11,8 +12,9 @@ def connect(ip,port):
     userid = None
     config = None
     result = None
-    global our_turn
-    our_turn = False
+    global turn, color
+    turn = 0
+    color = 0
 
     client.settimeout(3)
 
@@ -24,6 +26,7 @@ def connect(ip,port):
             config = pack.data['config']
             print('Succesfully connected as id:',userid)
             result = 'Connected, waiting \nfor game to start...'
+            color = userid
         elif pack.code == Packet.ERROR:
             print('Failed to connect, error occured:', pack.data)
             result = 'Failed to connect, \nerror occured:' + str(pack.data)
@@ -70,11 +73,14 @@ def declareExit():
     send_message(client,Packet(Packet.LEAVE))
 
 def is_our_turn():
-    return our_turn
+    return turn == color
 
-def network(moves,grid,state,animations,color):
+def get_turn():
+    return turn
 
-    global our_turn
+def network(moves,grid,animations,color):
+
+    global our_turn, turn
 
     try:
         pack = recieve_message(client)
@@ -90,14 +96,15 @@ def network(moves,grid,state,animations,color):
         elif pack.code == Packet.UPDATE:
             if pack.data.metadata['source'] != color: 
                 move = pack.data
-                move.preanimation.apply(grid,state)
+                move.preanimation.apply(grid)
                 if move.animation is not None:
                     move.animation.prepare()
                     animations.append(move)
 
         elif pack.code == Packet.PLAY:
-            print('DEBUG: Permission to play')
-            our_turn = True
+            print('DEBUG: PLAY packet')
+            print(pack.data)
+            turn = pack.data['turn']
 
         else:
             print('Invalid server response:', pack.code, pack.data)

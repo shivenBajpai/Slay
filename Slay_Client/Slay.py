@@ -16,6 +16,10 @@ def main(grid,color,config):
     screen = pygame.display.set_mode([WINDOWX+ 200, WINDOWY])
     pygame.display.set_caption('Slay')
 
+    screen.fill((48,48,48))
+    screen.blit(pygame.image.load('./Slay_Assets/loading_text.png'),(0,0))
+    pygame.display.flip()
+
     # They need pygame initialized first, so we import them later
     from Renderer import cells,drawEntities,drawMapLayer,drawMouseEntity,drawBaseLayer,drawSideBar,reset_renderer
     from Move_Utils import handleEvent,get_mouse_entity,get_selected_city,reset_move_utils
@@ -25,7 +29,6 @@ def main(grid,color,config):
     running = True
     moves = []
     animations = []
-    state = {}
     beat = 0
     reset_move_utils(WINDOWX,WINDOWY)
     reset_renderer(WINDOWX,WINDOWY)
@@ -40,20 +43,19 @@ def main(grid,color,config):
             for event in pygame.event.get(): handleEvent(event,grid,moves,color)
                 
             # talk to server
-            network(moves,grid,state,animations,color)
+            network(moves,grid,animations,color)
 
             # draw
             drawBaseLayer(screen,WINDOWX,WINDOWY)
             drawMapLayer(screen, grid, floor(beat/2)%2==0)
             drawEntities(screen, grid, floor(beat/2)%2==0)
-            drawSideBar(screen, grid, get_selected_city(), is_our_turn(), WINDOWX, WINDOWY)
+            drawSideBar(screen, grid, get_selected_city(), WINDOWX, WINDOWY)
             drawMouseEntity(screen, get_mouse_entity(), pygame.mouse.get_pos())
 
             for index, animation in enumerate(animations):
                 if animation.animation.animate(screen): 
-                    animation.postanimation.apply(grid,state)
+                    animation.postanimation.apply(grid)
                     del animations[index]
-
     
             pygame.display.flip()
             time.sleep(1/100)

@@ -35,15 +35,12 @@ class Animation:
         return False
 
 class GameUpdate:
-    def __init__(self,gridChanges: list[tuple],stateChanges: dict) -> None:
+    def __init__(self,gridChanges: list[tuple]) -> None:
         self.gridChanges = gridChanges
-        self.stateChanges = stateChanges
 
-    def apply(self,grid,state) -> None:
+    def apply(self,grid) -> None:
         for pos, newState in self.gridChanges:
             grid[pos[0]][pos[1]] = newState
-
-        state.update(self.stateChanges)
 
 class Move: # just a data struct
     def __init__(self,meta,preanim: GameUpdate,anim: Animation,postanim: GameUpdate) -> None:

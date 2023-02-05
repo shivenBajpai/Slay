@@ -1,5 +1,6 @@
 from TextureLoader import *
 from Constants import *
+from Networking import is_our_turn,get_turn
 import pygame
 
 roboto = None
@@ -63,20 +64,26 @@ def drawShopWindow(screen,WINDOWX,gold):
 
     return height
 
-def drawSideBar(screen :pygame.Surface,grid,selected,turn,WINDOWX,WINDOWY):
+def drawSideBar(screen :pygame.Surface,grid,selected,WINDOWX,WINDOWY):
 
     global end_button_rect
 
-    #Status line    
-    screen.blit(roboto_heading.render('Waiting for server',True,(0,0,0)),(WINDOWX+center('Waiting for server',roboto_heading),15))
+    #Status line
+    if is_our_turn():
+        screen.blit(roboto_heading.render('Your turn',True,(0,0,0)),(WINDOWX+center('Your turn',roboto_heading),15))
+    else:
+        turn = get_turn()
+        screen.blit(roboto_heading.render(f'{COLOR_MAPPING[turn-1]}\'s turn',True,(0,0,0)),(WINDOWX+center(f'{COLOR_MAPPING[turn-1]}\'s turn',roboto_heading),15))
+
     screen.fill((0,0,0),pygame.Rect(WINDOWX+20,45,160,2))
 
     #End Turn button
-    if not turn:
-        screen.blit(buttons[0][2],(WINDOWX + 33,WINDOWY-50))
-    else:
+    if is_our_turn():
         if end_button_rect.collidepoint(pygame.mouse.get_pos()): screen.blit(buttons[0][1],(WINDOWX + 33,WINDOWY-50))
         else: screen.blit(buttons[0][0],(WINDOWX + 33,WINDOWY-50))
+    else:
+        screen.blit(buttons[0][2],(WINDOWX + 33,WINDOWY-50))
+        
 
 
     #Shop window and finances

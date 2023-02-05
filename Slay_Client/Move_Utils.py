@@ -195,9 +195,9 @@ def handleEvent(event,grid,moves,color):
                     if mouse_pos != pick_up_pos:
 
                         move = Move({'source':color},
-                                GameUpdate([(pick_up_pos, copy.deepcopy(grid[pick_up_pos[0]][pick_up_pos[1]]) )], {}),
+                                GameUpdate([(pick_up_pos, copy.deepcopy(grid[pick_up_pos[0]][pick_up_pos[1]]) )]),
                                 Animation(mouse_entity,pick_up_pos,mouse_pos),
-                                GameUpdate([(mouse_pos, copy.deepcopy(grid[mouse_pos[0]][mouse_pos[1]]) )], {})
+                                GameUpdate([(mouse_pos, copy.deepcopy(grid[mouse_pos[0]][mouse_pos[1]]) )])
                                 )
                         for centre in affected_cells: move.postanimation.gridChanges.append((centre,copy.deepcopy(grid[centre[0]][centre[1]])))
                         moves.append(move)
@@ -205,9 +205,9 @@ def handleEvent(event,grid,moves,color):
                 else:
 
                     move = Move({'source':color},
-                            GameUpdate([(mouse_pos, copy.deepcopy(grid[mouse_pos[0]][mouse_pos[1]]) )], {}),
+                            GameUpdate([(mouse_pos, copy.deepcopy(grid[mouse_pos[0]][mouse_pos[1]]) )]),
                             None,
-                            GameUpdate([], {})
+                            GameUpdate([])
                             )
                     for centre in affected_cells: move.preanimation.gridChanges.append((centre,copy.deepcopy(grid[centre[0]][centre[1]])))
                     moves.append(move)
@@ -251,15 +251,12 @@ class Animation:
         return False
 
 class GameUpdate:
-    def __init__(self,gridChanges: list[tuple],stateChanges: dict) -> None:
+    def __init__(self,gridChanges: list[tuple]) -> None:
         self.gridChanges = gridChanges
-        self.stateChanges = stateChanges
 
-    def apply(self,grid,state) -> None:
+    def apply(self,grid) -> None:
         for pos, newState in self.gridChanges:
             grid[pos[0]][pos[1]] = newState
-
-        state.update(self.stateChanges)
 
 class Move: # just a data struct
     def __init__(self,meta,preanim: GameUpdate,anim: Animation,postanim: GameUpdate) -> None:
