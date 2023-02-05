@@ -132,13 +132,13 @@ def GetConnectingTerritories(mouse_pos,grid,color,selected_city):
         if (grid[cell[0]][cell[1]].color != color): continue
         if (cell in grid[selected_city[0]][selected_city[1]].land): continue
         if (grid[cell[0]][cell[1]].hall_loc is not None): connecting.append(cell)
-
     return connecting
 
 def convertCity(grid,joining_city,selected_city):
     for cell in grid[joining_city[0]][joining_city[1]].land:
         grid[cell[0]][cell[1]].hall_loc = selected_city
 
+    print(selected_city,'is joined by',joining_city)
     grid[selected_city[0]][selected_city[1]].wages += grid[joining_city[0]][joining_city[1]].wages
     grid[selected_city[0]][selected_city[1]].income += grid[joining_city[0]][joining_city[1]].income
     grid[selected_city[0]][selected_city[1]].net += grid[joining_city[0]][joining_city[1]].net
@@ -159,10 +159,14 @@ def moveHall(grid,old_pos):
     if len(land) < 3: 
         for cell in land:
             grid[cell[0]][cell[1]].hall_loc = None
-        return land
+            #TODO: kill units
+        return land, None
+
+    tmp = land.copy()
+    rng = None
 
     while True:
-        rng = land[random.randint(0,len(land)-1)]
+        rng = tmp[random.randint(0,len(tmp)-1)]
         if grid[rng[0]][rng[1]].entity < TOWER:
             grid[rng[0]][rng[1]].entity = CITY
             grid[rng[0]][rng[1]].land = land
@@ -174,6 +178,100 @@ def moveHall(grid,old_pos):
             for cell in land:
                 grid[cell[0]][cell[1]].hall_loc = rng
             break
+        else: tmp.remove(rng)
 
-    return land
+        if len(tmp) < 3: 
+            for cell in land:
+                grid[cell[0]][cell[1]].hall_loc = None
+                #TODO: kill units
+            break
 
+    return land, rng
+
+def checkForDivide(hall_pos,grid):
+    actual_land = [hall_pos]
+    color_aggregate(hall_pos[0],hall_pos[1],actual_land,actual_land,grid)
+    if len(actual_land) != len(grid[hall_pos[0]][hall_pos[1]].land): 
+        print('divide caught!')
+        return True, actual_land
+    print('no divide')
+    return False, actual_land
+
+def createCity(land,grid):
+    if len(land)==1: 
+        grid[land[0][0]][land[0][1]].hall_loc = None
+        #TODO: Kill the unit if exists
+        return
+
+    tmp = land.copy()
+    rng = None
+
+    while True:
+        rng = tmp[random.randint(0,len(tmp)-1)]
+        if grid[rng[0]][rng[1]].entity < TOWER:
+            grid[rng[0]][rng[1]].entity = CITY
+            grid[rng[0]][rng[1]].land = land
+            grid[rng[0]][rng[1]].wages = 0
+            grid[rng[0]][rng[1]].income = 0
+            grid[rng[0]][rng[1]].gold = 0
+            
+            for cell in land:
+                grid[cell[0]][cell[1]].hall_loc = rng
+                if grid[cell[0]][cell[1]].entity not in (2,3):
+                    grid[rng[0]][rng[1]].income += 1
+                    if grid[cell[0]][cell[1]].entity > CITY: grid[rng[0]][rng[1]].wages += math.floor(2*(3**(grid[cell[0]][cell[1]].entity- MAN)))
+
+            grid[rng[0]][rng[1]].net = grid[rng[0]][rng[1]].income - grid[rng[0]][rng[1]].wages
+            break
+
+        else: tmp.remove(rng)
+
+        if len(tmp) < 2: 
+            for cell in land:
+                grid[cell[0]][cell[1]].hall_loc = None
+                #TODO: kill units
+            break
+
+    HandleSplits(grid,rng,None)
+    return
+
+def appendLandifnotAppended(affected_cells,land):
+    for cell in land:
+        if cell not in affected_cells: affected_cells.append(cell)
+    return
+
+def HandleSplits(grid,original_hall,affected_cells):
+    isDivide, actual_land = checkForDivide(original_hall,grid)
+    if isDivide:
+        
+        if affected_cells is not None:
+            appendLandifnotAppended(affected_cells,grid[original_hall[0]][original_hall[1]].land)
+
+        if len(actual_land)>1:
+            print(original_hall,'had more than 1, ',len(actual_land))
+            split_land = grid[original_hall[0]][original_hall[1]].land.copy()
+            grid[original_hall[0]][original_hall[1]].land = actual_land
+            grid[original_hall[0]][original_hall[1]].income = 0
+            grid[original_hall[0]][original_hall[1]].wages = 0
+
+            for land in actual_land:
+                split_land.remove(land)
+                if grid[land[0]][land[1]].entity not in (2,3):
+                    grid[original_hall[0]][original_hall[1]].income += 1
+                    if grid[land[0]][land[1]].entity > CITY: grid[original_hall[0]][original_hall[1]].wages += math.floor(2*(3**(grid[land[0]][land[1]].entity- MAN)))
+
+            grid[original_hall[0]][original_hall[1]].net = grid[original_hall[0]][original_hall[1]].gold + grid[original_hall[0]][original_hall[1]].income - grid[original_hall[0]][original_hall[1]].wages
+        else:
+            print(original_hall,'had 1, ',len(actual_land))
+            split_land = grid[original_hall[0]][original_hall[1]].land.copy()
+            split_land.remove(original_hall)
+            grid[original_hall[0]][original_hall[1]].land = []
+            grid[original_hall[0]][original_hall[1]].income = None
+            grid[original_hall[0]][original_hall[1]].wages = None
+            grid[original_hall[0]][original_hall[1]].net = None
+            grid[original_hall[0]][original_hall[1]].hall_loc = None
+            grid[original_hall[0]][original_hall[1]].entity = 0
+
+        createCity(split_land,grid)
+    
+    return

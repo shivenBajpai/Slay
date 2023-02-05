@@ -1,8 +1,8 @@
 from TextureLoader import entities
 from pygame.locals import QUIT, MOUSEMOTION, MOUSEBUTTONDOWN, MOUSEBUTTONUP
 from pygame import Rect, mouse
-from Constants import CITY,MAN,NONE,TREE,PALM
-from Hex_Utils import cursor_on_grid,getValidMoves,getValidPlacementSpots,GetConnectingTerritories,color_aggregate,convertCity,moveHall
+from Constants import *
+from Hex_Utils import cursor_on_grid,getValidMoves,getValidPlacementSpots,GetConnectingTerritories,color_aggregate,convertCity,moveHall,HandleSplits
 from Networking import declareExit,is_our_turn
 import math
 import copy
@@ -86,7 +86,7 @@ def handleEvent(event,grid,moves,color):
                 for location in valid_locations:
                     grid[location[0]][location[1]].selected = True
 
-        elif end_button_rect.collidepoint(mouse.get_pos()):
+        elif is_our_turn() and end_button_rect.collidepoint(mouse.get_pos()):
             moves.append('end')
 
         elif is_our_turn() and selected_city != None:
@@ -113,6 +113,7 @@ def handleEvent(event,grid,moves,color):
             if mouse_pos in valid_locations and mouse_on_grid:
                 
                 affected_cells = []
+                affected_enemy_hall = None
 
                 # doubling up
                 if grid[mouse_pos[0]][mouse_pos[1]].entity == mouse_entity and grid[mouse_pos[0]][mouse_pos[1]].color == color: 
@@ -139,10 +140,12 @@ def handleEvent(event,grid,moves,color):
 
                             if grid[mouse_pos[0]][mouse_pos[1]].entity == CITY:
                                 # Captured enemy centre, move it
-                                affected_cells.extend(moveHall(grid,mouse_pos))
+                                enemy_land, affected_enemy_hall = moveHall(grid,mouse_pos)
+                                affected_cells.extend(enemy_land)
                             else:
                                 # captured random enemy land
                                 affected_cells.append(grid[mouse_pos[0]][mouse_pos[1]].hall_loc)
+                                affected_enemy_hall = affected_cells[-1]
                                 grid[affected_cells[-1][0]][affected_cells[-1][1]].income -= 1
                                 wage_change = math.floor(2*3**(grid[mouse_pos[0]][mouse_pos[1]].entity-MAN))
                                 grid[affected_cells[-1][0]][affected_cells[-1][1]].wages -= wage_change
@@ -154,6 +157,8 @@ def handleEvent(event,grid,moves,color):
 
                         for connection in connections:
                             #This connecting bit of land belongs to a city, join these two cities.
+
+                            if grid[connection[0]][connection[1]].hall_loc == selected_city: continue
                             joining_city = grid[connection[0]][connection[1]].hall_loc
                             affected_cells.extend(grid[joining_city[0]][joining_city[1]].land)
                             convertCity(grid,joining_city,selected_city)
@@ -178,6 +183,10 @@ def handleEvent(event,grid,moves,color):
 
                     grid[mouse_pos[0]][mouse_pos[1]].hall_loc = selected_city
                     grid[mouse_pos[0]][mouse_pos[1]].entity = mouse_entity
+
+                    # check if we split a enemy city in two
+                    if affected_enemy_hall is not None:
+                        HandleSplits(grid,affected_enemy_hall,affected_cells)
 
                 for location in valid_locations: grid[location[0]][location[1]].selected = False
                 valid_locations = None
@@ -231,7 +240,7 @@ class Animation:
             end = (self.endpos[0]*48,self.endpos[1]*36)
 
         self.frame = 0
-        self.frames = getpoints(start,end,25)
+        self.frames = getpoints(start,end,15)
 
     def animate(self,screen) -> bool:
 
