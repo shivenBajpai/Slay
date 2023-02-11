@@ -41,6 +41,11 @@ def get_mouse_entity():
 def get_selected_city():
     return selected_city
 
+def set_selected_city(new):
+    global selected_city
+    selected_city = new
+    return selected_city
+
 def getpoints(a,b,n):
 
     xdiff = (b[0]-a[0])/(n+1)

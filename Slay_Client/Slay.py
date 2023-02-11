@@ -22,7 +22,7 @@ def main(grid,color,config):
 
     # They need pygame initialized first, so we import them later
     from Renderer import cells,drawEntities,drawMapLayer,drawMouseEntity,drawBaseLayer,drawSideBar,reset_renderer
-    from Move_Utils import handleEvent,get_mouse_entity,get_selected_city,reset_move_utils
+    from Move_Utils import handleEvent,get_mouse_entity,get_selected_city,set_selected_city,reset_move_utils
 
     pygame.display.set_icon(cells[color][0])
 
@@ -43,7 +43,7 @@ def main(grid,color,config):
             for event in pygame.event.get(): handleEvent(event,grid,moves,color)
                 
             # talk to server
-            network(moves,grid,animations,color,get_selected_city())
+            network(moves,grid,animations,color,get_selected_city(),set_selected_city)
 
             # draw
             drawBaseLayer(screen,WINDOWX,WINDOWY)
@@ -55,7 +55,7 @@ def main(grid,color,config):
             for index, animation in enumerate(animations):
                 if animation.animation.animate(screen): 
                     animation.postanimation.apply(grid)
-                    Hex_Utils.fixHighlighting(grid,get_selected_city())
+                    set_selected_city(Hex_Utils.fixHighlighting(grid,get_selected_city()))
                     del animations[index]
     
             pygame.display.flip()

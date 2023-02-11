@@ -82,7 +82,7 @@ def is_our_turn():
 def get_turn():
     return turn
 
-def network(moves,grid,animations,color,selected_city):
+def network(moves,grid,animations,color,selected_city,set_selected_city):
 
     global our_turn, turn
 
@@ -101,7 +101,7 @@ def network(moves,grid,animations,color,selected_city):
             if pack.data.metadata['source'] != color: 
                 move = pack.data
                 move.preanimation.apply(grid)
-                fixHighlighting(grid,selected_city)
+                set_selected_city(fixHighlighting(grid,selected_city))
                 if move.animation is not None:
                     move.animation.prepare()
                     animations.append(move)

@@ -335,8 +335,13 @@ def SecurityCalculate(grid,pos):
     return
 
 def fixHighlighting(grid,selected_city):
+    if (selected_city is not None) and grid[selected_city[0]][selected_city[1]].entity != CITY: sel = None
+    else: sel = selected_city
     for y in range (0,xsize):
         for x in range(0,ysize): 
             grid[x][y].selected = False
-            if (selected_city is not None) and (x,y) in grid[selected_city[0]][selected_city[1]].land: 
-                grid[x][y].selected = True
+            if sel is not None:
+                if (x,y) in grid[sel[0]][sel[1]].land: 
+                    grid[x][y].selected = True
+
+    return sel
