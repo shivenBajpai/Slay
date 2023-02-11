@@ -15,6 +15,10 @@ def recieve_message(socket):
     msg = pickle.loads(socket.recv(msglen))
     return msg
 
+def broadcast(connections,message):
+    for addr,conn in connections.items():
+        send_message(conn,message)
+
 class Packet:
 
     # status codes

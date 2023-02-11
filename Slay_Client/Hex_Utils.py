@@ -12,9 +12,12 @@ class Hex:
         self.terrain = (color > 0)
         self.selected = False
         self.entity = 0
+        self.security = 0
+        self.security_providers = []
         self.hall_flag = False
         self.hall_loc = None
         self.land = []
+        self.playable = False
         pass
 
 def cursor_on_grid(old_pos):
@@ -90,7 +93,7 @@ def land_aggregate(x,y,land,grid):
 
     return
 
-def getValidMoves(pos,grid,color,level):
+def getValidMoves(pos,grid,color,entity):
     valid = []
     capital = grid[pos[0]][pos[1]].hall_loc
     city_land = grid[capital[0]][capital[1]].land
@@ -100,30 +103,29 @@ def getValidMoves(pos,grid,color,level):
         if not grid[location[0]][location[1]].terrain: continue
 
         if grid[location[0]][location[1]].color == color: 
-            if location in city_land and grid[location[0]][location[1]].entity < TOWER or (grid[location[0]][location[1]].entity == level and level<KNIGHT):
+            if location in city_land and grid[location[0]][location[1]].entity < TOWER or (grid[location[0]][location[1]].entity == entity and entity<KNIGHT):
                 valid.append(location)
 
         else:
+            
+            if grid[location[0]][location[1]].security >= entity-CITY: continue
             for neighbour in neighbours(location[0],location[1],1):
-
-                #TODO: Security level check
 
                 if neighbour in city_land:
                     valid.append(location)
                     break
 
     valid.append(pos)
-
     return set(valid)
 
-def getValidPlacementSpots(hall_pos,grid,level):
+def getValidPlacementSpots(hall_pos,grid,entity):
     valid = grid[hall_pos[0]][hall_pos[1]].land.copy()
+    
     for loc in valid:
-        if grid[loc[0]][loc[1]].entity > GRAVE:
-            if level < KNIGHT and grid[loc[0]][loc[1]].entity == level: continue
+        if grid[loc[0]][loc[1]].entity > GRAVE and not(entity < KNIGHT and entity > CITY and grid[loc[0]][loc[1]].entity == entity):
             valid.remove(loc)
 
-    # TODO: add valid bordering enemy positions
+    # TODO: add valid bordering enemy positions, wihh appr. security check
     return valid
 
 def GetConnectingTerritories(mouse_pos,grid,color,selected_city):
@@ -186,7 +188,7 @@ def moveHall(grid,old_pos):
                 #TODO: kill units
             break
 
-    return land, rng
+    return land, rng # rng is the new position of the enemy city
 
 def checkForDivide(hall_pos,grid):
     actual_land = [hall_pos]
@@ -197,7 +199,7 @@ def checkForDivide(hall_pos,grid):
     print('no divide')
     return False, actual_land
 
-def createCity(land,grid):
+def createCity(land,grid,affected_cells,queued_security_updates):
     if len(land)==1: 
         grid[land[0][0]][land[0][1]].hall_loc = None
         #TODO: Kill the unit if exists
@@ -232,20 +234,20 @@ def createCity(land,grid):
                 #TODO: kill units
             break
 
-    HandleSplits(grid,rng,None)
+    HandleSplits(grid,rng,affected_cells,queued_security_updates)
+    return rng
+
+def appendifnotAppended(array,items):
+    for item in items:
+        if item not in array: array.append(item)
     return
 
-def appendLandifnotAppended(affected_cells,land):
-    for cell in land:
-        if cell not in affected_cells: affected_cells.append(cell)
-    return
-
-def HandleSplits(grid,original_hall,affected_cells):
+def HandleSplits(grid,original_hall,affected_cells,queued_security_updates):
     isDivide, actual_land = checkForDivide(original_hall,grid)
     if isDivide:
         
         if affected_cells is not None:
-            appendLandifnotAppended(affected_cells,grid[original_hall[0]][original_hall[1]].land)
+            appendifnotAppended(affected_cells,grid[original_hall[0]][original_hall[1]].land)
 
         if len(actual_land)>1:
             print(original_hall,'had more than 1, ',len(actual_land))
@@ -272,6 +274,62 @@ def HandleSplits(grid,original_hall,affected_cells):
             grid[original_hall[0]][original_hall[1]].hall_loc = None
             grid[original_hall[0]][original_hall[1]].entity = 0
 
-        createCity(split_land,grid)
+        new_hall_loc = createCity(split_land,grid,affected_cells,queued_security_updates)
+        if new_hall_loc is not None:
+            queued_security_updates.append(new_hall_loc)
+            appendifnotAppended(affected_cells,verify(neighbours(new_hall_loc[0],new_hall_loc[1],1)))
     
     return
+
+def SecurityUpdate(grid,position):
+    
+    SecurityCalculate(grid,position)
+
+    for cell in verify(neighbours(position[0],position[1],1)):
+        if grid[cell[0]][cell[1]].terrain: SecurityCalculate(grid,cell)
+        
+    return
+
+def SecurityCalculate(grid,pos):
+    highest = 0
+    color = grid[pos[0]][pos[1]].color
+    grid[pos[0]][pos[1]].security_providers = []
+    if grid[pos[0]][pos[1]].hall_loc is None: 
+        grid[pos[0]][pos[1]].security = 0
+        return
+    if grid[pos[0]][pos[1]].entity == TOWER: highest = TOWER_SECURITY
+    elif grid[pos[0]][pos[1]].entity == CITY: highest = CITY_SECURITY
+    elif grid[pos[0]][pos[1]].entity > CITY: highest = grid[pos[0]][pos[1]].entity-CITY
+
+    for cell in verify(neighbours(pos[0],pos[1],1)):
+        if grid[cell[0]][cell[1]].terrain and grid[cell[0]][cell[1]].color == color and grid[cell[0]][cell[1]].entity > GRAVE: 
+            if grid[cell[0]][cell[1]].entity == TOWER and highest <= TOWER_SECURITY:
+                if highest != TOWER_SECURITY:
+                    grid[pos[0]][pos[1]].security_providers = [cell]
+                else:
+                    grid[pos[0]][pos[1]].security_providers.append(cell)
+                highest = TOWER_SECURITY
+
+            elif grid[cell[0]][cell[1]].entity == CITY and highest <= CITY_SECURITY: 
+                if highest != CITY_SECURITY:
+                    grid[pos[0]][pos[1]].security_providers = [cell]
+                else:
+                    grid[pos[0]][pos[1]].security_providers.append(cell)
+                highest = CITY_SECURITY
+
+            elif highest <= grid[cell[0]][cell[1]].entity-CITY:
+                if highest != grid[cell[0]][cell[1]].entity-CITY:
+                    grid[pos[0]][pos[1]].security_providers = [cell]
+                else:
+                    grid[pos[0]][pos[1]].security_providers.append(cell)
+                highest = grid[cell[0]][cell[1]].entity-CITY
+
+    grid[pos[0]][pos[1]].security = highest
+    return
+
+def fixhighlighting(grid,selected_city):
+    for y in range (0,xsize):
+        for x in range(0,ysize): 
+            grid[x][y].selected = False
+            if (selected_city is not None) and (x,y) in grid[selected_city[0]][selected_city[1]].land: 
+                grid[x][y].selected = True

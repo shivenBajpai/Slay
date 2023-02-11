@@ -1,7 +1,9 @@
 import socket
+import copy
 from Net_Utils import *
 from Constants import *
 from Hex_Utils import *
+from Move_Utils import Move, GameUpdate
 
 clients = []
 
@@ -60,15 +62,8 @@ try:
                     elif pack.code == Packet.MOVE:
                         print(f'recieved move from {addr}')
                         if list(connections.keys()).index(addr) == turn:
-                            for addr,conn in connections.items():
-                                send_message(conn,Packet(
-                                    Packet.UPDATE,
-                                    pack.data
-                                ))
-                                send_message(conn,Packet(
-                                    Packet.PLAY,
-                                    {'turn':turn+1}    
-                                ))
+                            broadcast(connections,Packet(Packet.UPDATE,pack.data))
+                            broadcast(connections,Packet(Packet.PLAY,{'turn':turn+1}))
 
                             pack.data.preanimation.apply(serverside_grid)
                             pack.data.postanimation.apply(serverside_grid)
@@ -82,13 +77,12 @@ try:
                             turn += 1
                             if turn == len(connections): 
                                 turn = 0
-                                # TODO: serverside updates
+                                move = Move({'source':0},GameUpdate([]),None,GameUpdate([]))
+                                for cell in roundupdate(serverside_grid): move.preanimation.gridChanges.append((cell,copy.deepcopy(serverside_grid[cell[0]][cell[1]])))
+                                broadcast(connections,Packet(Packet.UPDATE,move))
 
-                            for addr,conn in connections.items():
-                                send_message(conn,Packet(
-                                    Packet.PLAY,
-                                    {'turn':turn+1}    
-                                ))
+                            broadcast(connections,Packet(Packet.PLAY,{'turn':turn+1}))
+
                         else: 
                             print('Attempted end out of turn')
 

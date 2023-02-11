@@ -1,4 +1,5 @@
 from Net_Utils import *
+from Hex_Utils import fixhighlighting
 import socket
 
 turn = 0 # corresponds to color/userid whose turn it is. This is not the same as serverside variable turn
@@ -78,7 +79,7 @@ def is_our_turn():
 def get_turn():
     return turn
 
-def network(moves,grid,animations,color):
+def network(moves,grid,animations,color,selected_city):
 
     global our_turn, turn
 
@@ -97,13 +98,13 @@ def network(moves,grid,animations,color):
             if pack.data.metadata['source'] != color: 
                 move = pack.data
                 move.preanimation.apply(grid)
+                fixhighlighting(grid,selected_city)
                 if move.animation is not None:
                     move.animation.prepare()
                     animations.append(move)
 
         elif pack.code == Packet.PLAY:
             print('DEBUG: PLAY packet')
-            print(pack.data)
             turn = pack.data['turn']
 
         else:

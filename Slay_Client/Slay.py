@@ -43,18 +43,19 @@ def main(grid,color,config):
             for event in pygame.event.get(): handleEvent(event,grid,moves,color)
                 
             # talk to server
-            network(moves,grid,animations,color)
+            network(moves,grid,animations,color,get_selected_city())
 
             # draw
             drawBaseLayer(screen,WINDOWX,WINDOWY)
             drawMapLayer(screen, grid, floor(beat/2)%2==0)
-            drawEntities(screen, grid, floor(beat/2)%2==0)
+            drawEntities(screen, grid, floor(beat/2)%2==0, color)
             drawSideBar(screen, grid, get_selected_city(), WINDOWX, WINDOWY)
             drawMouseEntity(screen, get_mouse_entity(), pygame.mouse.get_pos())
 
             for index, animation in enumerate(animations):
                 if animation.animation.animate(screen): 
                     animation.postanimation.apply(grid)
+                    Hex_Utils.fixhighlighting(grid,get_selected_city())
                     del animations[index]
     
             pygame.display.flip()
@@ -66,3 +67,7 @@ def main(grid,color,config):
     except GameEndingException as err:
         pygame.quit()
         return 'Error: ' + str(err), False
+
+    except Exception as err:
+        pygame.quit()
+        return 'Critical Error: ' + str(err), False

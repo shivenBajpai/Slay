@@ -2,7 +2,7 @@ from TextureLoader import entities
 from pygame.locals import QUIT, MOUSEMOTION, MOUSEBUTTONDOWN, MOUSEBUTTONUP
 from pygame import Rect, mouse
 from Constants import *
-from Hex_Utils import cursor_on_grid,getValidMoves,getValidPlacementSpots,GetConnectingTerritories,color_aggregate,convertCity,moveHall,HandleSplits
+from Hex_Utils import *
 from Networking import declareExit,is_our_turn
 import math
 import copy
@@ -27,11 +27,12 @@ def reset_move_utils(WINDOWX,WINDOWY):
     pick_up_pos = None
     selected_city = None
     shop_button_rects = (
-        (Rect((WINDOWX+23,95),(48,48)),10),
-        (Rect((WINDOWX+23,135),(48,48)),20),
-        (Rect((WINDOWX+23,175),(48,48)),30),
-        (Rect((WINDOWX+23,215),(48,48)),40)
-    ) # Bounding Box and Cost pairs
+        (Rect((WINDOWX+23,95),(48,48)),10,MAN),
+        (Rect((WINDOWX+23,135),(48,48)),15,TOWER),
+        (Rect((WINDOWX+23,175),(48,48)),20,SPEARMAN),
+        (Rect((WINDOWX+23,215),(48,48)),30,BARON),
+        (Rect((WINDOWX+23,255),(48,48)),40,KNIGHT)
+    ) # (Bounding Box, Cost, Entity)
     end_button_rect = Rect((WINDOWX + 33,WINDOWY-50),(134,33))
 
 def get_mouse_entity():
@@ -76,7 +77,7 @@ def handleEvent(event,grid,moves,color):
             else:
                 selected_city = None
 
-            if is_our_turn() and grid[mouse_pos[0]][mouse_pos[1]].entity > CITY and grid[mouse_pos[0]][mouse_pos[1]].color == color:
+            if is_our_turn() and grid[mouse_pos[0]][mouse_pos[1]].entity > CITY and grid[mouse_pos[0]][mouse_pos[1]].playable and grid[mouse_pos[0]][mouse_pos[1]].color == color:
                 mouse_entity = grid[mouse_pos[0]][mouse_pos[1]].entity
             
                 grid[mouse_pos[0]][mouse_pos[1]].entity = NONE
@@ -93,7 +94,7 @@ def handleEvent(event,grid,moves,color):
             for idx, rect in enumerate(shop_button_rects):
                 if rect[0].collidepoint(mouse.get_pos()) and grid[selected_city[0]][selected_city[1]].gold >= rect[1]:
                     pick_up_pos = None
-                    mouse_entity = MAN + idx
+                    mouse_entity = rect[2]
                     valid_locations = getValidPlacementSpots(selected_city,grid,mouse_entity)
 
                     for location in valid_locations:
@@ -112,12 +113,15 @@ def handleEvent(event,grid,moves,color):
         if  mouse_entity > NONE:
             if mouse_pos in valid_locations and mouse_on_grid:
                 
-                affected_cells = []
+                affected_cells = [] #List of all cells with changes, need not contain the cell unit was picked from and moved onto
+                queued_security_updates = []
                 affected_enemy_hall = None
 
                 # doubling up
                 if grid[mouse_pos[0]][mouse_pos[1]].entity == mouse_entity and grid[mouse_pos[0]][mouse_pos[1]].color == color: 
                     affected_cells.append(selected_city)
+                    affected_cells.extend(verify(neighbours(mouse_pos[0],mouse_pos[1],1)))
+                    queued_security_updates.append(mouse_pos)
                     wage_change = math.floor(2*(3**(mouse_entity-MAN+1))-2*(3**(mouse_entity-MAN)))
                     grid[selected_city[0]][selected_city[1]].wages += wage_change
                     grid[selected_city[0]][selected_city[1]].net -= wage_change
@@ -130,6 +134,8 @@ def handleEvent(event,grid,moves,color):
                         grid[mouse_pos[0]][mouse_pos[1]].color = color
 
                         affected_cells.append(selected_city)
+                        affected_cells.extend(verify(neighbours(mouse_pos[0],mouse_pos[1],1)))
+                        queued_security_updates.append(mouse_pos)
                         print(selected_city)
                         grid[selected_city[0]][selected_city[1]].income += 1
                         grid[selected_city[0]][selected_city[1]].net += 1
@@ -141,6 +147,9 @@ def handleEvent(event,grid,moves,color):
                             if grid[mouse_pos[0]][mouse_pos[1]].entity == CITY:
                                 # Captured enemy centre, move it
                                 enemy_land, affected_enemy_hall = moveHall(grid,mouse_pos)
+                                if affected_enemy_hall is not None: 
+                                    queued_security_updates.append(affected_enemy_hall)
+                                    appendifnotAppended(affected_cells,verify(neighbours(affected_enemy_hall[0],affected_enemy_hall[1],1)))
                                 affected_cells.extend(enemy_land)
                             else:
                                 # captured random enemy land
@@ -161,6 +170,7 @@ def handleEvent(event,grid,moves,color):
                             if grid[connection[0]][connection[1]].hall_loc == selected_city: continue
                             joining_city = grid[connection[0]][connection[1]].hall_loc
                             affected_cells.extend(grid[joining_city[0]][joining_city[1]].land)
+                            queued_security_updates.append(joining_city)
                             convertCity(grid,joining_city,selected_city)
     
                         #Now any connecting bit of land does not belong to city, therefore any indirectly connecting bits also dont beling to a city. Find them and add
@@ -177,22 +187,34 @@ def handleEvent(event,grid,moves,color):
                     # new unit
                     if pick_up_pos is None:
                         if selected_city not in affected_cells: affected_cells.append(selected_city)
+                        queued_security_updates.append(mouse_pos)
+                        appendifnotAppended(affected_cells,verify(neighbours(mouse_pos[0],mouse_pos[1],1)))
                         wage_change = math.floor(2*(3**(mouse_entity-MAN)))
                         grid[selected_city[0]][selected_city[1]].wages += wage_change
-                        grid[selected_city[0]][selected_city[1]].net -= wage_change
+                        grid[selected_city[0]][selected_city[1]].gold -= (mouse_entity-CITY)*10
+                        grid[selected_city[0]][selected_city[1]].net -= wage_change + (mouse_entity-CITY)*10
 
                     grid[mouse_pos[0]][mouse_pos[1]].hall_loc = selected_city
                     grid[mouse_pos[0]][mouse_pos[1]].entity = mouse_entity
 
                     # check if we split a enemy city in two
                     if affected_enemy_hall is not None:
-                        HandleSplits(grid,affected_enemy_hall,affected_cells)
+                        HandleSplits(grid,affected_enemy_hall,affected_cells,queued_security_updates)
+
+                if pick_up_pos is not None:
+                    queued_security_updates.append(pick_up_pos)
+                    affected_cells.extend(verify(neighbours(pick_up_pos[0],pick_up_pos[1],1)))
+
+                for update in queued_security_updates: SecurityUpdate(grid,update)
 
                 for location in valid_locations: grid[location[0]][location[1]].selected = False
                 valid_locations = None
 
                 if pick_up_pos is not None:
                     if mouse_pos != pick_up_pos:
+                        
+                        grid[mouse_pos[0]][mouse_pos[1]].playable = False
+                        grid[pick_up_pos[0]][pick_up_pos[1]].playable = False
 
                         move = Move({'source':color},
                                 GameUpdate([(pick_up_pos, copy.deepcopy(grid[pick_up_pos[0]][pick_up_pos[1]]) )]),
@@ -203,6 +225,8 @@ def handleEvent(event,grid,moves,color):
                         moves.append(move)
 
                 else:
+
+                    grid[mouse_pos[0]][mouse_pos[1]].playable = False
 
                     move = Move({'source':color},
                             GameUpdate([(mouse_pos, copy.deepcopy(grid[mouse_pos[0]][mouse_pos[1]]) )]),

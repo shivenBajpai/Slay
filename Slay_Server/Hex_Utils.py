@@ -9,9 +9,12 @@ class Hex:
         self.terrain = (color > 0)
         self.selected = False
         self.entity = 0
+        self.security = 0
+        self.security_providers = []
         self.hall_flag = False
         self.hall_loc = None
         self.land = []
+        self.playable = False
         pass
 
 def neighbours(x,y,distance):
@@ -62,6 +65,121 @@ def land_aggregate(x,y,land,grid):
     for neighbour in new:
         land_aggregate(neighbour[0],neighbour[1],land,grid)
 
+    return
+
+def onShoreLine(x,y,grid):
+    for neighbour in verify(neighbours(x,y,1)):
+        if not grid[neighbour[0]][neighbour[1]].terrain:
+            return True
+    return False
+
+def addTrees(grid):
+    for y in range (0,YSIZE):
+        for x in range(0,XSIZE):
+            if grid[x][y].terrain and grid[x][y].entity == 0:
+                if random.randint(1,10)<2:
+                    if grid[x][y].hall_loc is not None: 
+                        grid[grid[x][y].hall_loc[0]][grid[x][y].hall_loc[1]].income -= 1
+                        grid[grid[x][y].hall_loc[0]][grid[x][y].hall_loc[1]].net -= 1
+                    if onShoreLine(x,y,grid): grid[x][y].entity = PALM
+                    if grid[x][y].entity == 0: grid[x][y].entity = TREE
+
+def roundupdate(grid):
+
+    affected_cells = []
+    trees_to_add = []
+    palms_to_add = []
+
+    for y in range (0,YSIZE):
+        for x in range(0,XSIZE):
+    
+            if not grid[x][y].terrain: continue
+            if grid[x][y].entity in (NONE,TOWER): continue
+            if grid[x][y].entity == CITY:
+                affected_cells.append((x,y))
+                if grid[x][y].net < 0:
+                    #TODO: kill units
+                    grid[x][y].gold = 0
+                else:
+                    grid[x][y].gold = grid[x][y].net
+                    grid[x][y].net = grid[x][y].gold + grid[x][y].income - grid[x][y].wages
+
+            elif grid[x][y].entity == TREE:
+                if random.randint(1,2) == 1:
+                    for cell in verify(neighbours(x,y,1)):
+                        if grid[cell[0]][cell[1]].entity == NONE and grid[cell[0]][cell[1]].terrain:
+                            trees_to_add.append(cell)
+                            affected_cells.append(cell)
+                            if grid[cell[0]][cell[1]].hall_loc is not None: 
+                                grid[grid[cell[0]][cell[1]].hall_loc[0]][grid[cell[0]][cell[1]].hall_loc[1]].income -= 1
+                                grid[grid[cell[0]][cell[1]].hall_loc[0]][grid[cell[0]][cell[1]].hall_loc[1]].net -= 1
+                            break
+
+            elif grid[x][y].entity == PALM:
+                for cell in verify(neighbours(x,y,1)):
+                    if grid[cell[0]][cell[1]].entity == NONE and grid[cell[0]][cell[1]].terrain and onShoreLine(cell[0],cell[1],grid):
+                        palms_to_add.append(cell)
+                        affected_cells.append(cell)
+                        if grid[cell[0]][cell[1]].hall_loc is not None: 
+                            grid[grid[cell[0]][cell[1]].hall_loc[0]][grid[cell[0]][cell[1]].hall_loc[1]].income -= 1
+                            grid[grid[cell[0]][cell[1]].hall_loc[0]][grid[cell[0]][cell[1]].hall_loc[1]].net -= 1
+                        break
+
+            else: #Its a unit
+                print('set',x,y,'to playable')
+                grid[x][y].playable = True
+                affected_cells.append((x,y))
+    
+    for cell in trees_to_add: grid[cell[0]][cell[1]].entity = TREE
+    for cell in palms_to_add: grid[cell[0]][cell[1]].entity = PALM
+
+    return affected_cells
+
+def SecurityUpdate(grid,position):
+    
+    SecurityCalculate(grid,position)
+
+    for cell in verify(neighbours(position[0],position[1],1)):
+        if grid[cell[0]][cell[1]].terrain: SecurityCalculate(grid,cell)
+        
+    return
+
+def SecurityCalculate(grid,pos):
+    highest = 0
+    color = grid[pos[0]][pos[1]].color
+    grid[pos[0]][pos[1]].security_providers = []
+    if grid[pos[0]][pos[1]].hall_loc is None: 
+        grid[pos[0]][pos[1]].security = 0
+        return
+    if grid[pos[0]][pos[1]].entity == TOWER: highest = TOWER_SECURITY
+    elif grid[pos[0]][pos[1]].entity == CITY: highest = CITY_SECURITY
+    elif grid[pos[0]][pos[1]].entity > CITY: grid[pos[0]][pos[1]].entity-CITY
+
+    for cell in verify(neighbours(pos[0],pos[1],1)):
+        if grid[cell[0]][cell[1]].terrain and grid[cell[0]][cell[1]].color == color and grid[cell[0]][cell[1]].entity > GRAVE:
+            if grid[cell[0]][cell[1]].entity == TOWER and highest <= TOWER_SECURITY:
+                if highest != TOWER_SECURITY:
+                    grid[pos[0]][pos[1]].security_providers = [cell]
+                else:
+                    grid[pos[0]][pos[1]].security_providers.append(cell)
+                highest = TOWER_SECURITY
+
+            elif grid[cell[0]][cell[1]].entity == CITY and highest <= CITY_SECURITY: 
+                if highest != CITY_SECURITY:
+                    grid[pos[0]][pos[1]].security_providers = [cell]
+                else:
+                    grid[pos[0]][pos[1]].security_providers.append(cell)
+                highest = CITY_SECURITY
+
+            elif highest <= grid[cell[0]][cell[1]].entity-CITY:
+                if highest != grid[cell[0]][cell[1]].entity-CITY:
+                    grid[pos[0]][pos[1]].security_providers = [cell]
+                else:
+                    grid[pos[0]][pos[1]].security_providers.append(cell)
+                highest = grid[cell[0]][cell[1]].entity-CITY
+
+    grid[pos[0]][pos[1]].security = highest
+    grid[pos[0]][pos[1]].security = highest
     return
 
 def createGrid():
@@ -140,11 +258,15 @@ def createGrid():
                     grid[x][y].net = grid[x][y].gold + grid[x][y].income 
                     for ally in land:
                         grid[ally[0]][ally[1]].hall_flag = True
-                        grid[ally[0]][ally[1]].hall_loc = (x,y)    
+                        grid[ally[0]][ally[1]].hall_loc = (x,y)
+
+                    #security setup
+                    SecurityUpdate(grid,(x,y))
 
         if max(hall_count) - min(hall_count) > 1: continue
         if min(hall_count) == 0: continue
         break
     
+    addTrees(grid)
     print(f'Successfully made grid in {iteration} iterations')
     return grid
