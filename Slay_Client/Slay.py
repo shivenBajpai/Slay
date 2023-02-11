@@ -1,5 +1,6 @@
 import contextlib
 with contextlib.redirect_stdout(None): import pygame
+import traceback as tb
 from Networking import *
 from Constants import *
 from math import floor
@@ -69,7 +70,8 @@ def main(grid,color,config):
         pygame.quit()
         return str(err), True
 
-    '''except Exception as err:
+    except Exception as err:
         pygame.quit()
         print(err)
-        return 'Client-side Error: ' + str(err), False'''
+        tb.print_exc()
+        return 'Client-side Error: ' + str(err), False
