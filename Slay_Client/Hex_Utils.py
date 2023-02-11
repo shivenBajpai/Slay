@@ -51,12 +51,6 @@ def neighbours(x,y,distance):
             return [(x,y+1),(x+1,y+1),(x-1,y),(x+1,y),(x,y-1),(x+1,y-1),(x-1,y+2),(x,y+2),(x+1,y+2),(x-1,y+2),(x+2,y+1),(x-1,y+1),(x-2,y),(x+2,y),(x-1,y-2),(x,y-2),(x+1,y-2),(x-1,y-2),(x+2,y-1),(x-1,y-1)]
         else:
             return [(x,y+1),(x-1,y+1),(x-1,y),(x+1,y),(x,y-1),(x-1,y-1),(x-1,y+2),(x,y+2),(x+1,y+2),(x-1,y+2),(x-2,y+1),(x+1,y+1),(x-2,y),(x+2,y),(x-1,y-2),(x,y-2),(x+1,y-2),(x-1,y-2),(x-2,y-1),(x+1,y-1)]
-    if distance==3:
-    #TODO: ENTER THE CONSTANTS
-        if y%2==1:
-            return [(x,y+1),(x+1,y+1),(x-1,y),(x+1,y),(x,y-1),(x+1,y-1),(x-1,y+2),(x,y+2),(x+1,y+2),(x-1,y+2),(x+2,y+1),(x-1,y+1),(x-2,y),(x+2,y),(x-1,y-2),(x,y-2),(x+1,y-2),(x-1,y-2),(x+2,y-1),(x-1,y-1)]
-        else:
-            return [(x,y+1),(x-1,y+1),(x-1,y),(x+1,y),(x,y-1),(x-1,y-1),(x-1,y+2),(x,y+2),(x+1,y+2),(x-1,y+2),(x-2,y+1),(x+1,y+1),(x-2,y),(x+2,y),(x-1,y-2),(x,y-2),(x+1,y-2),(x-1,y-2),(x-2,y-1),(x+1,y-1)]
 
 def verify(array):
     verified = []
@@ -66,7 +60,16 @@ def verify(array):
         verified.append(cell)
     return verified
 
-#TODO: Remove aggregate functions if not used anywhere
+def getBorderingLand(hall_pos,grid):
+    land = grid[hall_pos[0]][hall_pos[1]].land.copy()
+
+    for x,y in grid[hall_pos[0]][hall_pos[1]].land:
+        tmp = verify(neighbours(x,y,1))
+        for cell in tmp: 
+            if not grid[cell[0]][cell[1]].terrain: tmp.remove(cell)
+        appendifnotAppended(land,tmp)
+
+    return land
 
 def color_aggregate(x,y,land,new,grid):
     new_this_call = []
@@ -77,19 +80,6 @@ def color_aggregate(x,y,land,new,grid):
 
     for neighbour in new_this_call:
         color_aggregate(neighbour[0],neighbour[1],land,new,grid)
-
-    return
-
-def land_aggregate(x,y,land,grid):
-
-    new = []
-    for neighbour in verify(neighbours(x,y,1)):
-        if grid[neighbour[0]][neighbour[1]].color != 0 and neighbour not in land:
-            land.append(neighbour)
-            new.append(neighbour)
-
-    for neighbour in new:
-        land_aggregate(neighbour[0],neighbour[1],land,grid)
 
     return
 
@@ -119,13 +109,18 @@ def getValidMoves(pos,grid,color,entity):
     return set(valid)
 
 def getValidPlacementSpots(hall_pos,grid,entity):
-    valid = grid[hall_pos[0]][hall_pos[1]].land.copy()
-    
-    for loc in valid:
-        if grid[loc[0]][loc[1]].entity > GRAVE and not(entity < KNIGHT and entity > CITY and grid[loc[0]][loc[1]].entity == entity):
-            valid.remove(loc)
 
-    # TODO: add valid bordering enemy positions, wihh appr. security check
+    if entity != TOWER:
+        valid = getBorderingLand(hall_pos,grid)
+        for loc in valid:
+            if grid[loc[0]][loc[1]].color == grid[hall_pos[0]][hall_pos[1]].color:
+                if grid[loc[0]][loc[1]].entity > GRAVE and not(entity < KNIGHT and entity > CITY and grid[loc[0]][loc[1]].entity == entity): valid.remove(loc)
+            elif grid[loc[0]][loc[1]].security >= entity-CITY: valid.remove(loc)
+    else:
+        valid = grid[hall_pos[0]][hall_pos[1]].land.copy()
+        for loc in valid:
+            if grid[loc[0]][loc[1]].entity > GRAVE: valid.remove(loc)
+
     return valid
 
 def GetConnectingTerritories(mouse_pos,grid,color,selected_city):
@@ -164,6 +159,7 @@ def moveHall(grid,old_pos):
             if grid[cell[0]][cell[1]].entity > CITY: 
                 grid[cell[0]][cell[1]].entity = GRAVE
                 grid[cell[0]][cell[1]].gravetime = 2
+                SecurityUpdate(grid,cell)
         return land, None
 
     tmp = land.copy()
@@ -190,6 +186,7 @@ def moveHall(grid,old_pos):
                 if grid[cell[0]][cell[1]].entity > CITY: 
                     grid[cell[0]][cell[1]].entity = GRAVE
                     grid[cell[0]][cell[1]].gravetime = 2
+                    SecurityUpdate(grid,cell)
             break
 
     return land, rng # rng is the new position of the enemy city
@@ -209,6 +206,7 @@ def createCity(land,grid,affected_cells,queued_security_updates):
         if grid[land[0][0]][land[0][1]].entity > CITY: 
             grid[land[0][0]][land[0][1]].entity = GRAVE
             grid[land[0][0]][land[0][1]].gravetime = 2
+            SecurityUpdate(grid,land[0])
         return
 
     tmp = land.copy()
@@ -240,6 +238,7 @@ def createCity(land,grid,affected_cells,queued_security_updates):
                 if grid[cell[0]][cell[1]].entity > CITY: 
                     grid[cell[0]][cell[1]].entity = GRAVE
                     grid[cell[0]][cell[1]].gravetime = 2
+                    SecurityUpdate(grid,cell)
             break
 
     HandleSplits(grid,rng,affected_cells,queued_security_updates)

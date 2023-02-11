@@ -69,6 +69,7 @@ def main(grid,color,config):
         pygame.quit()
         return str(err), True
 
-    except Exception as err:
+    '''except Exception as err:
         pygame.quit()
-        return 'Client-side Error: ' + str(err), False
+        print(err)
+        return 'Client-side Error: ' + str(err), False'''

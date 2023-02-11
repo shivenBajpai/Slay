@@ -28,12 +28,6 @@ def neighbours(x,y,distance):
             return [(x,y+1),(x+1,y+1),(x-1,y),(x+1,y),(x,y-1),(x+1,y-1),(x-1,y+2),(x,y+2),(x+1,y+2),(x-1,y+2),(x+2,y+1),(x-1,y+1),(x-2,y),(x+2,y),(x-1,y-2),(x,y-2),(x+1,y-2),(x-1,y-2),(x+2,y-1),(x-1,y-1)]
         else:
             return [(x,y+1),(x-1,y+1),(x-1,y),(x+1,y),(x,y-1),(x-1,y-1),(x-1,y+2),(x,y+2),(x+1,y+2),(x-1,y+2),(x-2,y+1),(x+1,y+1),(x-2,y),(x+2,y),(x-1,y-2),(x,y-2),(x+1,y-2),(x-1,y-2),(x-2,y-1),(x+1,y-1)]
-    if distance==3:
-    #TODO: ENTER THE CONSTANTS
-        if y%2==1:
-            return [(x,y+1),(x+1,y+1),(x-1,y),(x+1,y),(x,y-1),(x+1,y-1),(x-1,y+2),(x,y+2),(x+1,y+2),(x-1,y+2),(x+2,y+1),(x-1,y+1),(x-2,y),(x+2,y),(x-1,y-2),(x,y-2),(x+1,y-2),(x-1,y-2),(x+2,y-1),(x-1,y-1)]
-        else:
-            return [(x,y+1),(x-1,y+1),(x-1,y),(x+1,y),(x,y-1),(x-1,y-1),(x-1,y+2),(x,y+2),(x+1,y+2),(x-1,y+2),(x-2,y+1),(x+1,y+1),(x-2,y),(x+2,y),(x-1,y-2),(x,y-2),(x+1,y-2),(x-1,y-2),(x-2,y-1),(x+1,y-1)]
 
 def verify(array):
     verified = []
@@ -105,6 +99,8 @@ def roundupdate(grid):
                     for cell in grid[x][y].land:
                         if grid[cell[0]][cell[1]].entity > CITY:
                             grid[x][y].wages -= math.floor(2*(3**(grid[cell[0]][cell[1]].entity-MAN)))
+                            grid[cell[0]][cell[1]].entity = NONE
+                            SecurityUpdate(grid,cell)
                             affected_cells.append(cell)
                             graves_to_add.append(cell)
 

@@ -240,6 +240,10 @@ def handleEvent(event,grid,moves,color):
 
             elif pick_up_pos is not None:
                 grid[pick_up_pos[0]][pick_up_pos[1]].entity = mouse_entity
+            
+            else:
+                for location in valid_locations: grid[location[0]][location[1]].selected = False
+                valid_locations = None
 
             for cell in grid[selected_city[0]][selected_city[1]].land:
                 grid[cell[0]][cell[1]].selected = True
