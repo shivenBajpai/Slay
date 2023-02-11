@@ -71,16 +71,16 @@ def drawShopWindow(screen,WINDOWX,gold):
 
     return height
 
-def drawSideBar(screen :pygame.Surface,grid,selected,WINDOWX,WINDOWY):
+def drawSideBar(screen :pygame.Surface,grid,selected,WINDOWX,WINDOWY,color):
 
     global end_button_rect
 
     #Status line
     if is_our_turn():
-        screen.blit(roboto_heading.render('Your turn',True,(0,0,0)),(WINDOWX+center('Your turn',roboto_heading),15))
+        screen.blit(roboto_heading.render('Your turn',True,COLOR_MAPPING[color-1]),(WINDOWX+center('Your turn',roboto_heading),15))
     else:
         turn = get_turn()
-        screen.blit(roboto_heading.render(f'{COLOR_MAPPING[turn-1]}\'s turn',True,(0,0,0)),(WINDOWX+center(f'{COLOR_MAPPING[turn-1]}\'s turn',roboto_heading),15))
+        screen.blit(roboto_heading.render(f'{NAME_MAPPING[turn-1]}\'s turn',True,COLOR_MAPPING[turn-1]),(WINDOWX+center(f'{NAME_MAPPING[turn-1]}\'s turn',roboto_heading),15))
 
     screen.fill((0,0,0),pygame.Rect(WINDOWX+20,45,160,2))
 

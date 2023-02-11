@@ -1,6 +1,6 @@
 from Net_Utils import *
 from Hex_Utils import fixHighlighting
-from Constants import COLOR_MAPPING
+from Constants import NAME_MAPPING
 import socket
 
 turn = 0 # corresponds to color/userid whose turn it is. This is not the same as serverside variable turn
@@ -112,7 +112,7 @@ def network(moves,grid,animations,color,selected_city):
 
         elif pack.code == Packet.END:
             print('Player',pack.data['winner'],'won')
-            raise GameFinishedException('Game Ended: ' + COLOR_MAPPING[pack.data['winner']] + ' victory!')
+            raise GameFinishedException('Game Ended: ' + NAME_MAPPING[pack.data['winner']] + ' victory!')
 
         else:
             print('Invalid server response:', pack.code, pack.data)

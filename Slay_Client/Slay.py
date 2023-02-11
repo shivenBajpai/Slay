@@ -49,7 +49,7 @@ def main(grid,color,config):
             drawBaseLayer(screen,WINDOWX,WINDOWY)
             drawMapLayer(screen, grid, floor(beat/2)%2==0)
             drawEntities(screen, grid, floor(beat/2)%2==0, color)
-            drawSideBar(screen, grid, get_selected_city(), WINDOWX, WINDOWY)
+            drawSideBar(screen, grid, get_selected_city(), WINDOWX, WINDOWY, color)
             drawMouseEntity(screen, get_mouse_entity(), pygame.mouse.get_pos())
 
             for index, animation in enumerate(animations):
