@@ -3,6 +3,10 @@ from tkinter import ttk
 from Slay import main
 from Networking import connect, getGrid, disconnect
 
+def raise_above_all(window):
+    window.attributes('-topmost', 1)
+    window.attributes('-topmost', 0)
+
 def run():
 
     ip,port = ip_field.get(),port_field.get()
@@ -45,6 +49,7 @@ def run():
     result, success = main(grid,color,config)
 
     disconnect()
+    raise_above_all(window)
 
     status.set(result)
     if success: statusLabel.configure(foreground='green')
