@@ -55,19 +55,20 @@ def main(grid,color,config):
             for index, animation in enumerate(animations):
                 if animation.animation.animate(screen): 
                     animation.postanimation.apply(grid)
-                    Hex_Utils.fixhighlighting(grid,get_selected_city())
+                    Hex_Utils.fixHighlighting(grid,get_selected_city())
                     del animations[index]
     
             pygame.display.flip()
             time.sleep(1/100)
 
-        pygame.quit()
-        return 'Game ended', True
-
     except GameEndingException as err:
         pygame.quit()
         return 'Error: ' + str(err), False
 
+    except GameFinishedException as err:
+        pygame.quit()
+        return str(err), True
+
     except Exception as err:
         pygame.quit()
-        return 'Critical Error: ' + str(err), False
+        return 'Client-side Error: ' + str(err), False

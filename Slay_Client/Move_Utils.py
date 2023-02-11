@@ -91,7 +91,7 @@ def handleEvent(event,grid,moves,color):
             moves.append('end')
 
         elif is_our_turn() and selected_city != None:
-            for idx, rect in enumerate(shop_button_rects):
+            for rect in shop_button_rects:
                 if rect[0].collidepoint(mouse.get_pos()) and grid[selected_city[0]][selected_city[1]].gold >= rect[1]:
                     pick_up_pos = None
                     mouse_entity = rect[2]
@@ -109,6 +109,7 @@ def handleEvent(event,grid,moves,color):
     elif event.type == MOUSEBUTTONUP and event.button == 1: 
 
         mousedown = False
+        double_up_flag = False
 
         if  mouse_entity > NONE:
             if mouse_pos in valid_locations and mouse_on_grid:
@@ -119,6 +120,7 @@ def handleEvent(event,grid,moves,color):
 
                 # doubling up
                 if grid[mouse_pos[0]][mouse_pos[1]].entity == mouse_entity and grid[mouse_pos[0]][mouse_pos[1]].color == color: 
+                    double_up_flag = True
                     affected_cells.append(selected_city)
                     affected_cells.extend(verify(neighbours(mouse_pos[0],mouse_pos[1],1)))
                     queued_security_updates.append(mouse_pos)
@@ -213,7 +215,7 @@ def handleEvent(event,grid,moves,color):
                 if pick_up_pos is not None:
                     if mouse_pos != pick_up_pos:
                         
-                        grid[mouse_pos[0]][mouse_pos[1]].playable = False
+                        if not double_up_flag: grid[mouse_pos[0]][mouse_pos[1]].playable = False
                         grid[pick_up_pos[0]][pick_up_pos[1]].playable = False
 
                         move = Move({'source':color},
@@ -226,7 +228,7 @@ def handleEvent(event,grid,moves,color):
 
                 else:
 
-                    grid[mouse_pos[0]][mouse_pos[1]].playable = False
+                    if not double_up_flag: grid[mouse_pos[0]][mouse_pos[1]].playable = False
 
                     move = Move({'source':color},
                             GameUpdate([(mouse_pos, copy.deepcopy(grid[mouse_pos[0]][mouse_pos[1]]) )]),

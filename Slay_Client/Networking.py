@@ -1,5 +1,6 @@
 from Net_Utils import *
-from Hex_Utils import fixhighlighting
+from Hex_Utils import fixHighlighting
+from Constants import COLOR_MAPPING
 import socket
 
 turn = 0 # corresponds to color/userid whose turn it is. This is not the same as serverside variable turn
@@ -7,6 +8,8 @@ color = 0
 client = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
 
 class GameEndingException(Exception): ...
+
+class GameFinishedException(Exception): ...
 
 def connect(ip,port):
 
@@ -98,7 +101,7 @@ def network(moves,grid,animations,color,selected_city):
             if pack.data.metadata['source'] != color: 
                 move = pack.data
                 move.preanimation.apply(grid)
-                fixhighlighting(grid,selected_city)
+                fixHighlighting(grid,selected_city)
                 if move.animation is not None:
                     move.animation.prepare()
                     animations.append(move)
@@ -106,6 +109,10 @@ def network(moves,grid,animations,color,selected_city):
         elif pack.code == Packet.PLAY:
             print('DEBUG: PLAY packet')
             turn = pack.data['turn']
+
+        elif pack.code == Packet.END:
+            print('Player',pack.data['winner'],'won')
+            raise GameFinishedException('Game Ended: ' + COLOR_MAPPING[pack.data['winner']] + ' victory!')
 
         else:
             print('Invalid server response:', pack.code, pack.data)

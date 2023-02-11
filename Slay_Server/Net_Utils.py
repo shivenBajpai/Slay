@@ -22,9 +22,9 @@ def broadcast(connections,message):
 class Packet:
 
     # status codes
-    OK = 0      # Acknowledgement code
-    ID = 1      # ID and GRID data
-    LOAD = 2    # initial game state data (REDUNDANT, using ID for both)
+    END = 0      # Game Ended Gracefully
+    ID = 1      # ID and Config data
+    LOAD = 2    # Initial Grid state
     UPDATE = 3  # Update to game state
     PING = 4    # Ping Request
     PLAY = 5    # Instruct client to play

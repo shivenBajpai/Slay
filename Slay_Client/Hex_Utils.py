@@ -161,7 +161,9 @@ def moveHall(grid,old_pos):
     if len(land) < 3: 
         for cell in land:
             grid[cell[0]][cell[1]].hall_loc = None
-            #TODO: kill units
+            if grid[cell[0]][cell[1]].entity > CITY: 
+                grid[cell[0]][cell[1]].entity = GRAVE
+                grid[cell[0]][cell[1]].gravetime = 2
         return land, None
 
     tmp = land.copy()
@@ -185,7 +187,9 @@ def moveHall(grid,old_pos):
         if len(tmp) < 3: 
             for cell in land:
                 grid[cell[0]][cell[1]].hall_loc = None
-                #TODO: kill units
+                if grid[cell[0]][cell[1]].entity > CITY: 
+                    grid[cell[0]][cell[1]].entity = GRAVE
+                    grid[cell[0]][cell[1]].gravetime = 2
             break
 
     return land, rng # rng is the new position of the enemy city
@@ -202,7 +206,9 @@ def checkForDivide(hall_pos,grid):
 def createCity(land,grid,affected_cells,queued_security_updates):
     if len(land)==1: 
         grid[land[0][0]][land[0][1]].hall_loc = None
-        #TODO: Kill the unit if exists
+        if grid[land[0][0]][land[0][1]].entity > CITY: 
+            grid[land[0][0]][land[0][1]].entity = GRAVE
+            grid[land[0][0]][land[0][1]].gravetime = 2
         return
 
     tmp = land.copy()
@@ -231,7 +237,9 @@ def createCity(land,grid,affected_cells,queued_security_updates):
         if len(tmp) < 2: 
             for cell in land:
                 grid[cell[0]][cell[1]].hall_loc = None
-                #TODO: kill units
+                if grid[cell[0]][cell[1]].entity > CITY: 
+                    grid[cell[0]][cell[1]].entity = GRAVE
+                    grid[cell[0]][cell[1]].gravetime = 2
             break
 
     HandleSplits(grid,rng,affected_cells,queued_security_updates)
@@ -327,7 +335,7 @@ def SecurityCalculate(grid,pos):
     grid[pos[0]][pos[1]].security = highest
     return
 
-def fixhighlighting(grid,selected_city):
+def fixHighlighting(grid,selected_city):
     for y in range (0,xsize):
         for x in range(0,ysize): 
             grid[x][y].selected = False

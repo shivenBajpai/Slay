@@ -84,25 +84,41 @@ def addTrees(grid):
                     if onShoreLine(x,y,grid): grid[x][y].entity = PALM
                     if grid[x][y].entity == 0: grid[x][y].entity = TREE
 
+def appendifnotAppended(array,items):
+    for item in items:
+        if item not in array: array.append(item)
+    return
+
 def roundupdate(grid):
 
     affected_cells = []
     trees_to_add = []
     palms_to_add = []
+    graves_to_add = []
+
+    for y in range (0,YSIZE):
+        for x in range(0,XSIZE):
+            if grid[x][y].entity == CITY:
+                affected_cells.append((x,y))
+
+                if grid[x][y].net < 0:
+                    for cell in grid[x][y].land:
+                        if grid[cell[0]][cell[1]].entity > CITY:
+                            grid[x][y].wages -= math.floor(2*(3**(grid[cell[0]][cell[1]].entity-MAN)))
+                            affected_cells.append(cell)
+                            graves_to_add.append(cell)
+
+                    grid[x][y].gold = 0
+                    grid[x][y].net = grid[x][y].income - grid[x][y].wages
+                else:
+                    grid[x][y].gold = grid[x][y].net
+                    grid[x][y].net = grid[x][y].gold + grid[x][y].income - grid[x][y].wages
 
     for y in range (0,YSIZE):
         for x in range(0,XSIZE):
     
             if not grid[x][y].terrain: continue
-            if grid[x][y].entity in (NONE,TOWER): continue
-            if grid[x][y].entity == CITY:
-                affected_cells.append((x,y))
-                if grid[x][y].net < 0:
-                    #TODO: kill units
-                    grid[x][y].gold = 0
-                else:
-                    grid[x][y].gold = grid[x][y].net
-                    grid[x][y].net = grid[x][y].gold + grid[x][y].income - grid[x][y].wages
+            if grid[x][y].entity in (NONE,TOWER,CITY): continue
 
             elif grid[x][y].entity == TREE:
                 if random.randint(1,2) == 1:
@@ -124,6 +140,16 @@ def roundupdate(grid):
                             grid[grid[cell[0]][cell[1]].hall_loc[0]][grid[cell[0]][cell[1]].hall_loc[1]].income -= 1
                             grid[grid[cell[0]][cell[1]].hall_loc[0]][grid[cell[0]][cell[1]].hall_loc[1]].net -= 1
                         break
+            
+            elif grid[x][y].entity == GRAVE:
+                grid[x][y].gravetime -= 1
+                if grid[x][y].gravetime == 0:
+                    if onShoreLine(x,y,grid) and random.randint(1,2) == 1: palms_to_add.append((x,y))
+                    else: trees_to_add.append((x,y))
+                    affected_cells.append((x,y))
+                    if grid[x][y].hall_loc is not None: 
+                        grid[grid[x][y].hall_loc[0]][grid[x][y].hall_loc[1]].income -= 1
+                        appendifnotAppended(affected_cells,[grid[x][y].hall_loc])
 
             else: #Its a unit
                 print('set',x,y,'to playable')
@@ -132,8 +158,28 @@ def roundupdate(grid):
     
     for cell in trees_to_add: grid[cell[0]][cell[1]].entity = TREE
     for cell in palms_to_add: grid[cell[0]][cell[1]].entity = PALM
+    for cell in graves_to_add: 
+        grid[cell[0]][cell[1]].entity = GRAVE
+        grid[cell[0]][cell[1]].gravetime = 1
+        grid[cell[0]][cell[1]].playable = False
 
     return affected_cells
+
+def winCheck(grid,activePlayers):
+
+    hallcount = [0]*MAX_COLOR
+
+    for y in range (0,YSIZE):
+        for x in range(0,XSIZE):
+            if grid[x][y].entity == CITY: hallcount[grid[x][y].color-1] += 1
+    
+    for idx, count in enumerate(hallcount):
+        if count == 0:
+            activePlayers.remove(idx+1)
+    
+    if len(activePlayers)==1:
+        return True
+    return False
 
 def SecurityUpdate(grid,position):
     

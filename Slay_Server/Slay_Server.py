@@ -6,10 +6,12 @@ from Hex_Utils import *
 from Move_Utils import Move, GameUpdate
 
 clients = []
+class GameOver(Exception): ...
 
 # Prepare for game
 serverside_grid = createGrid()
 turn = 0 # Corresponds to index in connections list of player whose turn it is. Does not match with client-side variable turn
+activePlayers = [item for item in range(1, MAX_COLOR+1)]
 
 server_socket = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
 server_socket.bind((IP,PORT))
@@ -75,13 +77,17 @@ try:
                         if list(connections.keys()).index(addr) == turn:
 
                             turn += 1
-                            if turn == len(connections): 
+                            if turn == len(activePlayers): 
                                 turn = 0
                                 move = Move({'source':0},GameUpdate([]),None,GameUpdate([]))
-                                for cell in roundupdate(serverside_grid): move.preanimation.gridChanges.append((cell,copy.deepcopy(serverside_grid[cell[0]][cell[1]])))
-                                broadcast(connections,Packet(Packet.UPDATE,move))
+                                if winCheck(serverside_grid,activePlayers):
+                                    broadcast(connections,Packet(Packet.END,{'winner':activePlayers[0]-1}))
+                                    raise GameOver(activePlayers[0])
+                                else:
+                                    for cell in roundupdate(serverside_grid): move.preanimation.gridChanges.append((cell,copy.deepcopy(serverside_grid[cell[0]][cell[1]])))
+                                    broadcast(connections,Packet(Packet.UPDATE,move))
 
-                            broadcast(connections,Packet(Packet.PLAY,{'turn':turn+1}))
+                            broadcast(connections,Packet(Packet.PLAY,{'turn':activePlayers[turn]}))
 
                         else: 
                             print('Attempted end out of turn')
@@ -118,6 +124,9 @@ except PlayerDisconnectException as err:
                 {'error':f'{player} disconnected'}
             ))
         except Exception: pass
+
+except GameOver as err:
+    print(f'Player {err} won!, Shutting down...')
 
 except BaseException as err:
     print('Unexpected Error! Shutting down...')

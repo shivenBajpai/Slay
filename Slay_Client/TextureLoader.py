@@ -32,9 +32,11 @@ entities.append(
     pygame.image.load('./Slay_Assets/tree.png').convert_alpha()
 )
 entities.append(
-    pygame.image.load('./Slay_Assets/tower.png').convert_alpha()
-) #Palm
-entities.append(0) #Grave
+    pygame.image.load('./Slay_Assets/palm.png').convert_alpha()
+)
+entities.append(
+    pygame.image.load('./Slay_Assets/grave.png').convert_alpha()
+)
 entities.append(
     pygame.image.load('./Slay_Assets/tower.png').convert_alpha()
 )
