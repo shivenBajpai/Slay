@@ -2,6 +2,7 @@ from tkinter import *
 from tkinter import ttk
 from Slay import main
 from Networking import connect, getGrid, disconnect
+from socket import gethostbyname,gaierror
 
 def raise_above_all(window):
     window.attributes('-topmost', 1)
@@ -11,16 +12,16 @@ def run():
 
     ip,port = ip_field.get(),port_field.get()
 
-    if len(ip) < 7: 
-        status.set('Invalid ip')
-        statusLabel.configure(foreground='red')
-        return
-    if ip.count('.') != 3:
-        status.set('Invalid ip')
-        statusLabel.configure(foreground='red')
-        return
     if port<1 or port>65535:
         status.set('Invalid port')
+        statusLabel.configure(foreground='red')
+        return
+
+    try:
+        ip = gethostbyname(ip)
+    except (Exception):
+        print('gaierror')
+        status.set('Error resolving address,\ntry again if the issue \npersists,you have the wrong \naddress')
         statusLabel.configure(foreground='red')
         return
 
@@ -72,7 +73,7 @@ ip_field = StringVar()
 port_field = IntVar()
 status = StringVar()
 
-ttk.Label(mainframe,text='Enter IP: ',padding='45 0 0 0').grid(column=1,row=2,columnspan=2,sticky=(E))
+ttk.Label(mainframe,text='Hostname: ',padding='45 0 0 0').grid(column=1,row=2,columnspan=2,sticky=(E))
 ttk.Entry(mainframe,textvariable=ip_field,width=30).grid(column=3,row=2,columnspan=2,sticky=(W))
 ip_field.set('127.0.0.1')
 ttk.Label(mainframe,text='Port: ',padding='5 0 0 0').grid(column=5,row=2,sticky=(W))

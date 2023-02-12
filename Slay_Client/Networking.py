@@ -2,6 +2,7 @@ from Net_Utils import *
 from Hex_Utils import fixHighlighting
 from Constants import NAME_MAPPING
 import socket
+import traceback as tb
 
 turn = 0 # corresponds to color/userid whose turn it is. This is not the same as serverside variable turn
 color = 0
@@ -43,9 +44,14 @@ def connect(ip,port):
     except(ConnectionResetError):
         print('Failed to connect, Server reset')
         result = 'Failed to connect,\nServer reset unexpectedly'
-    except (socket.gaierror):
-        print('gaierror')
-        result = 'Error resolving address,\ntry again if the issue \npersists,you have the wrong \naddress'
+    except(BaseException) as err:
+        print('Failed to connect')
+        print(err)
+        tb.print_exc()
+        result = 'Failed to connect, ' + str(err)
+    #except (socket.gaierror):
+    #    print('gaierror')
+    #    result = 'Error resolving address,\ntry again if the issue \npersists,you have the wrong \naddress'
 
     return result, userid, config
 
