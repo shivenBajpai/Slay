@@ -115,10 +115,10 @@ def drawMapLayer(screen :pygame.Surface, grid, blink: bool):
         for x in range(0,len(grid)):
             if (y%2==1):
                 screen.blit(cells[grid[x][y].color][grid[x][y].selected or (blink and grid[x][y].blink)],((x+0.5)*48,y*36))
-                screen.blit(debug.render(str(grid[x][y].security),True,(255,255,100)),((x+1)*48,y*36))
+                #screen.blit(debug.render(str(grid[x][y].security),True,(255,255,50)),((x+1)*48,y*36))
             else:
                 screen.blit(cells[grid[x][y].color][grid[x][y].selected or (blink and grid[x][y].blink)],(x*48,y*36))
-                screen.blit(debug.render(str(grid[x][y].security),True,(255,255,100)),((x+0.5)*48,y*36))
+                #screen.blit(debug.render(str(grid[x][y].security),True,(255,255,50)),((x+0.5)*48,y*36))
     return
 
 def drawEntities(screen :pygame.Surface, grid, beat: int, color: int):

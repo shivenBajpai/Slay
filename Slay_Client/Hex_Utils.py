@@ -110,16 +110,20 @@ def getValidMoves(pos,grid,color,entity):
 
 def getValidPlacementSpots(hall_pos,grid,entity):
 
+    valid = []
+
     if entity != TOWER:
-        valid = getBorderingLand(hall_pos,grid)
-        for loc in valid:
+        land = getBorderingLand(hall_pos,grid)
+        for loc in land:
             if grid[loc[0]][loc[1]].color == grid[hall_pos[0]][hall_pos[1]].color:
-                if grid[loc[0]][loc[1]].entity > GRAVE and not(entity < KNIGHT and entity > CITY and grid[loc[0]][loc[1]].entity == entity): valid.remove(loc)
-            elif grid[loc[0]][loc[1]].security >= entity-CITY: valid.remove(loc)
+                if grid[loc[0]][loc[1]].entity <= GRAVE or (entity < KNIGHT and entity > CITY and grid[loc[0]][loc[1]].entity == entity): 
+                    valid.append(loc)
+            elif grid[loc[0]][loc[1]].security < entity-CITY: 
+                valid.append(loc)
     else:
-        valid = grid[hall_pos[0]][hall_pos[1]].land.copy()
-        for loc in valid:
-            if grid[loc[0]][loc[1]].entity > GRAVE: valid.remove(loc)
+        land = grid[hall_pos[0]][hall_pos[1]].land.copy()
+        for loc in land:
+            if grid[loc[0]][loc[1]].entity <= GRAVE: valid.append(loc)
 
     return valid
 
@@ -201,6 +205,9 @@ def checkForDivide(hall_pos,grid):
     return False, actual_land
 
 def createCity(land,grid,affected_cells,queued_security_updates):
+
+    print(f'createCity logs: \n Called with arguments: {land}')
+
     if len(land)==1: 
         grid[land[0][0]][land[0][1]].hall_loc = None
         if grid[land[0][0]][land[0][1]].entity > CITY: 
@@ -239,9 +246,12 @@ def createCity(land,grid,affected_cells,queued_security_updates):
                     grid[cell[0]][cell[1]].entity = GRAVE
                     grid[cell[0]][cell[1]].gravetime = 2
                     SecurityUpdate(grid,cell)
+            rng = None
             break
 
-    HandleSplits(grid,rng,affected_cells,queued_security_updates)
+    if rng is not None: 
+        print(f' Calling HandleSplits with: rng = {rng}\n its land is {grid[rng[0]][rng[1]].land}')
+        HandleSplits(grid,rng,affected_cells,queued_security_updates)
     return rng
 
 def appendifnotAppended(array,items):
@@ -253,6 +263,8 @@ def HandleSplits(grid,original_hall,affected_cells,queued_security_updates):
     isDivide, actual_land = checkForDivide(original_hall,grid)
     if isDivide:
         
+        print(f'Handlesplit logs:\n Called with Arguments {original_hall},{len(affected_cells)},{len(queued_security_updates)}\n This hall has land: {grid[original_hall[0]][original_hall[1]].land}\n Actual land eval to: {actual_land}')
+
         if affected_cells is not None:
             appendifnotAppended(affected_cells,grid[original_hall[0]][original_hall[1]].land)
 

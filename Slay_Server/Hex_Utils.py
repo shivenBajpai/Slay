@@ -71,7 +71,7 @@ def addTrees(grid):
     for y in range (0,YSIZE):
         for x in range(0,XSIZE):
             if grid[x][y].terrain and grid[x][y].entity == 0:
-                if random.randint(1,10)<2:
+                if random.randint(1,20)<2:
                     if grid[x][y].hall_loc is not None: 
                         grid[grid[x][y].hall_loc[0]][grid[x][y].hall_loc[1]].income -= 1
                         grid[grid[x][y].hall_loc[0]][grid[x][y].hall_loc[1]].net -= 1
@@ -282,7 +282,7 @@ def createGrid():
                     grid[x][y].hall_flag = True
                     grid[x][y].entity = CITY
                     grid[x][y].hall_loc = (x,y)
-                    grid[x][y].gold = 50
+                    grid[x][y].gold = 10
 
                     # add to hall count
                     hall_count[grid[x][y].color-1] += 1
