@@ -16,6 +16,6 @@ To run the game, run New_Launcher.py in the Slay_Client directory
 To start server run Slay_Server.py in Slay_Server directory
 
 \*Requires Port Forwarding to connect to servers outside your local network<br>
-\*\*Due to map generation taking much longer for high player counts, and due to more players requiring a map size that might make the window too big.\<testing pending on this\> In practice this gets limited to moderate number of players.
+\*\*Due to map generation taking much longer for high player counts, and due to more players requiring a map size that might make the window too big\<testing pending on this\>. In practice this gets limited to moderate number of players.
 
 Created using python ver 3.10.6, if you have weird issues maybe updating python will help
