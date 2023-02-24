@@ -17,10 +17,12 @@ MapYSize = 15
 # Number of players needed for the game
 NumberOfPlayers = 2
 
+[DISCOVERY]
 # Allow other computers on the local network to find and connect to this server
-# If set to False, all discovery related options will be ignored
+# If set to False, all discovery related options are meaningless
 EnableDiscovery = True
-# Name of server in client list
+
+# Name of server in server list on client side
 DiscoveryServerName = Slay Server
 
 # Password required to join

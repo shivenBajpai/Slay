@@ -1,5 +1,6 @@
 import socket
 import copy
+import sys
 from Net_Utils import *
 from Constants import *
 from Hex_Utils import *
@@ -147,6 +148,8 @@ except (ConnectionAbortedError,ConnectionResetError,ValueError) as err:
             ))
         except Exception: pass
 
+    sys.exit(err)
+
 except PlayerDisconnectException as err:
     addr = err.args[0]
     player = COLOR_MAPPING[list(connections.keys()).index(addr)]
@@ -171,6 +174,6 @@ except BaseException as err:
                 {'error':err}
             ))
         except Exception: pass
-    raise err
+    sys.exit(err)
 
-exit()
+sys.exit(0)
