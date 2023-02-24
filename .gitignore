@@ -1,6 +1,4 @@
 temp/
-Slay_Client_OG/
 */__pycache__/
 *.ini
-test.py
 /.vscode
