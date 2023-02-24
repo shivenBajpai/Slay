@@ -16,21 +16,54 @@ activePlayers = [item for item in range(1, MAX_COLOR+1)]
 server_socket = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
 server_socket.bind((IP,PORT))
 server_socket.listen(MAX_COLOR+1)
+server_socket.settimeout(0.1)
+
+discovery_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
+discovery_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+discovery_socket.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
+discovery_socket.bind(("0.0.0.0", 5005))
+discovery_socket.settimeout(0.1)
 
 connections = {}
 
 print('Server listening on port', PORT)
+print(f'Server Discovery: {DISCOVERABLE}')
 
 # Wait for adequate players to join
 while True:
-    conn, addr = server_socket.accept()
-    connections[addr] = conn
-    send_message(conn,Packet(
-        Packet.ID,
-        {'id':len(connections),'config':{'XSIZE':XSIZE,'YSIZE':YSIZE}}    
-    ))
-    print('connection from:',addr)
-    if len(connections) == MAX_COLOR: break
+    try:
+        conn, addr = server_socket.accept()
+        print('connection from:',addr)
+        pack = recieve_message(conn)
+        conn.settimeout(1)
+        if pack.__class__ != Packet: 
+            print('illegal, bounced')
+            conn.close()
+            continue
+        if pack.code == Packet.SERVERINFO: 
+            print('serverinfo request')
+            send_message(conn,Packet(Packet.SERVERINFO,{'public':PUBLIC}))
+            conn.close()
+            continue
+        if pack.code != Packet.CONNECT: 
+            print('inappropriate, bounced')
+            conn.close()
+            continue
+        if not PUBLIC and pack.data['password'] != PASSWORD:
+            print(f'wrong password, bounced ${pack.data["password"]}$ ${PASSWORD}$')
+            send_message(conn,Packet(Packet.ERROR,'Wrong Password'))
+            conn.close()
+            continue
+        connections[addr] = conn
+        send_message(conn,Packet(
+            Packet.ID,
+            {'id':len(connections),'config':{'XSIZE':XSIZE,'YSIZE':YSIZE}}    
+        ))
+        if len(connections) == MAX_COLOR: break
+    except Exception:
+        pass
+    finally:
+        handleDiscoveryRequests(discovery_socket,len(connections),ServerInfo.WAITING)
 
 # Send initial grid to connections
 for addr in connections:
@@ -99,6 +132,7 @@ try:
                     pass
 
             time.sleep(0.1)
+            handleDiscoveryRequests(discovery_socket,MAX_COLOR,ServerInfo.IN_GAME)
 
 except (ConnectionAbortedError,ConnectionResetError,ValueError) as err:
 

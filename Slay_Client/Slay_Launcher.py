@@ -2,7 +2,7 @@ from tkinter import *
 from tkinter import ttk
 from Slay import main
 from Networking import connect, getGrid, disconnect
-from socket import gethostbyname,gaierror
+from socket import gethostbyname
 
 def raise_above_all(window):
     window.attributes('-topmost', 1)
@@ -20,7 +20,6 @@ def run():
     try:
         ip = gethostbyname(ip)
     except (Exception):
-        print('gaierror')
         status.set('Error resolving address,\ntry again if the issue \npersists,you have the wrong \naddress')
         statusLabel.configure(foreground='red')
         return
@@ -28,6 +27,8 @@ def run():
     status.set('Connecting...')
     statusLabel.configure(foreground='red')
     connectButton.configure(state='disabled')
+    port_entry.configure(state='disabled')
+    host_entry.configure(state='disabled')
     window.update_idletasks()
     window.update()
 
@@ -36,6 +37,8 @@ def run():
     status.set(result)
     if color == None:
         connectButton.configure(state='enabled')
+        port_entry.configure(state='enabled')
+        host_entry.configure(state='enabled')
         return
     window.update_idletasks()
     window.update()
@@ -56,6 +59,8 @@ def run():
     if success: statusLabel.configure(foreground='green')
     else: statusLabel.configure(foreground='red')
     connectButton.configure(state='enabled')
+    port_entry.configure(state='enabled')
+    host_entry.configure(state='enabled')
 
 window = Tk()
 window.title('Slay Launcher')
@@ -74,10 +79,12 @@ port_field = IntVar()
 status = StringVar()
 
 ttk.Label(mainframe,text='Hostname: ',padding='45 0 0 0').grid(column=1,row=2,columnspan=2,sticky=(E))
-ttk.Entry(mainframe,textvariable=ip_field,width=30).grid(column=3,row=2,columnspan=2,sticky=(W))
+host_entry = ttk.Entry(mainframe,textvariable=ip_field,width=30)
+host_entry.grid(column=3,row=2,columnspan=2,sticky=(W))
 ip_field.set('127.0.0.1')
 ttk.Label(mainframe,text='Port: ',padding='5 0 0 0').grid(column=5,row=2,sticky=(W))
-ttk.Entry(mainframe,textvariable=port_field,width=7).grid(column=6,row=2,sticky=(E))
+port_entry = ttk.Entry(mainframe,textvariable=port_field,width=7)
+port_entry.grid(column=6,row=2,sticky=(E))
 port_field.set(4444)
 ttk.Label(mainframe,text='',padding='0 0 15 15').grid(column=7,row=2)
 

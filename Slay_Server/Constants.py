@@ -17,6 +17,16 @@ MapYSize = 15
 # Number of players needed for the game
 NumberOfPlayers = 2
 
+# Allow other computers on the local network to find and connect to this server
+# If set to False, all discovery related options will be ignored
+EnableDiscovery = True
+# Name of server in client list
+DiscoveryServerName = Slay Server
+
+# Password required to join
+# If empty, password will not be required
+Password = 
+
 [ADVANCED]
 # Dont touch unless you know what you're doing
 # IP on which server socket requests to listen
@@ -34,6 +44,10 @@ try:
     YSIZE = int(config['BASIC']['MapYSize'])
     MAX_COLOR = int(config['BASIC']['NumberOfPlayers'])
     IP = config['ADVANCED']['IP']
+    DISCOVERABLE = bool(config['DISCOVERY']['EnableDiscovery'])
+    NAME = config['DISCOVERY']['DiscoveryServerName']
+    PASSWORD = config['DISCOVERY']['Password']
+    PUBLIC = len(PASSWORD) == 0
 except (Exception) as err:
     print('Error Parsing config:')
     print(err)

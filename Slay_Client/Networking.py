@@ -1,6 +1,7 @@
 from Net_Utils import *
 from Hex_Utils import fixHighlighting
 from Constants import NAME_MAPPING
+from time import sleep
 import socket
 import traceback as tb
 
@@ -8,11 +9,17 @@ turn = 0 # corresponds to color/userid whose turn it is. This is not the same as
 color = 0
 client = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
 
+discovery = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
+discovery.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+discovery.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
+discovery.bind(("0.0.0.0", 5005))
+discovery.settimeout(0.1)
+
 class GameEndingException(Exception): ...
 
 class GameFinishedException(Exception): ...
 
-def connect(ip,port):
+def connect(ip,port,password=None,info_req=False,):
 
     userid = None
     config = None
@@ -25,6 +32,15 @@ def connect(ip,port):
 
     try:
         client.connect((ip,port))
+
+        if info_req:
+            send_message(client,Packet(Packet.SERVERINFO))
+            pack = recieve_message(client)
+            print(pack.data)
+            disconnect()
+            return pack.data
+
+        send_message(client,Packet(Packet.CONNECT,{'password':password}))
         pack = recieve_message(client)
         if pack.code == Packet.ID:
             userid = pack.data['id']
@@ -35,23 +51,24 @@ def connect(ip,port):
         elif pack.code == Packet.ERROR:
             print('Failed to connect, error occured:', pack.data)
             result = 'Failed to connect, \nerror occured:' + str(pack.data)
+            disconnect()
         else:
             print('Failed to connect, invalid server response:', pack.code, pack.data)
             result = 'Failed to connect, \ninvalid server response:' + str(pack.code)
+            disconnect()
+
     except (ConnectionRefusedError,TimeoutError):
         print('Failed to connect, Server offline')
         result = 'Failed to connect,\nServer is offline or \nnot accepting connections'
+        disconnect() # just in case of weird behaviour
     except(ConnectionResetError):
         print('Failed to connect, Server reset')
         result = 'Failed to connect,\nServer reset unexpectedly'
-    except(BaseException) as err:
+    except(Exception) as err: # if this stops working, this used to be BaseException
         print('Failed to connect')
         print(err)
         tb.print_exc()
         result = 'Failed to connect, ' + str(err)
-    #except (socket.gaierror):
-    #    print('gaierror')
-    #    result = 'Error resolving address,\ntry again if the issue \npersists,you have the wrong \naddress'
 
     return result, userid, config
 
@@ -133,3 +150,20 @@ def network(moves,grid,animations,color,selected_city,set_selected_city):
         else: send_message(client,Packet(Packet.MOVE,moves[0]))
         our_turn=False
         del moves[0]
+
+def getServers(servers,server_ips):
+    try:
+        discovery.sendto(bytes("discovery", "utf-8"), ("255.255.255.255", 5005))
+        while True:
+            data, _ = discovery.recvfrom(1024)
+            if data == b'discovery': continue
+            try: data = pickle.loads(data)
+            except: continue
+            if data.__class__ != ServerInfo: continue
+            if data.Address in server_ips: continue
+            servers.append(data)
+            server_ips.append(data.Address)
+    except TimeoutError: pass
+
+def closeDiscovery():
+    discovery.close()

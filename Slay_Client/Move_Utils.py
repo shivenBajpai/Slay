@@ -4,6 +4,7 @@ from pygame import Rect, mouse
 from Constants import *
 from Hex_Utils import *
 from Networking import declareExit,is_our_turn
+from Sound_Utils import *
 import math
 import copy
 
@@ -84,7 +85,7 @@ def handleEvent(event,grid,moves,color):
 
             if is_our_turn() and grid[mouse_pos[0]][mouse_pos[1]].entity > CITY and grid[mouse_pos[0]][mouse_pos[1]].playable and grid[mouse_pos[0]][mouse_pos[1]].color == color:
                 mouse_entity = grid[mouse_pos[0]][mouse_pos[1]].entity
-            
+
                 grid[mouse_pos[0]][mouse_pos[1]].entity = NONE
                 pick_up_pos = mouse_pos
                 valid_locations = getValidMoves(pick_up_pos,grid,color,mouse_entity)
@@ -92,8 +93,11 @@ def handleEvent(event,grid,moves,color):
                 for location in valid_locations:
                     grid[location[0]][location[1]].selected = True
 
+                pick_sound.play()
+
         elif is_our_turn() and end_button_rect.collidepoint(mouse.get_pos()):
             moves.append('end')
+            click_sound.play()
 
         elif is_our_turn() and selected_city != None:
             for rect in shop_button_rects:
@@ -104,6 +108,8 @@ def handleEvent(event,grid,moves,color):
 
                     for location in valid_locations:
                         grid[location[0]][location[1]].selected = True
+
+                    pick_sound.play()
 
                     break
         
@@ -216,6 +222,8 @@ def handleEvent(event,grid,moves,color):
 
                 for location in valid_locations: grid[location[0]][location[1]].selected = False
                 valid_locations = None
+
+                drop_sound.play()
 
                 if pick_up_pos is not None:
                     if mouse_pos != pick_up_pos:

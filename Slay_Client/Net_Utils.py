@@ -1,4 +1,5 @@
 import pickle
+import socket
 import time
 
 HEADERSIZE = 16
@@ -29,7 +30,40 @@ class Packet:
     ERROR = 8   # Serverside Error, Command to terminate connection + context (from server only)
     LEAVE = 9       # Indicate termination of connection + context (from client only)
     DISCONNECT = 10 # Command to terminate connection + context (from server only)
+    CONNECT = 11       # Request to connect, Password-Carrying packet
+    SERVERINFO = 12 # Request data related to server
 
     def __init__(self,code,data={}):
         self.code = code
         self.data = data
+
+class ServerInfo:
+
+    PUBLIC = True
+    PRIVATE = False
+
+    WAITING = 0
+    IN_GAME = 1
+
+    def __init__(self,name):
+        self.Name = name
+        self.Address = socket.gethostbyname(socket.gethostname())
+        self.Players = (0,0)
+        self.Status = ServerInfo.WAITING
+        self.Type = ServerInfo.PUBLIC
+
+def type(x):
+    if x == ServerInfo.PUBLIC: return 'Public'
+    if x == ServerInfo.PRIVATE: return 'Private'
+    return ''
+
+def status(x):
+    if x == ServerInfo.WAITING: return 'Waiting'
+    if x == ServerInfo.IN_GAME: return 'In Game'
+    return ''
+
+def players(x):
+    return str(x[0])+'/'+str(x[1])
+
+def address(x):
+    return x[0]+':'+str(x[1])

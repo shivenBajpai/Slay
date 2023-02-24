@@ -22,8 +22,16 @@ def main(grid,color,config):
     pygame.display.flip()
 
     # They need pygame initialized first, so we import them later
+    from Sound_Utils import restart_mixer,loadSounds
+
+    restart_mixer()
+    loadSounds(config['VOL'])
+
     from Renderer import cells,drawEntities,drawMapLayer,drawMouseEntity,drawBaseLayer,drawSideBar,reset_renderer
     from Move_Utils import handleEvent,get_mouse_entity,get_selected_city,set_selected_city,reset_move_utils
+
+    reset_move_utils(WINDOWX,WINDOWY)
+    reset_renderer(WINDOWX,WINDOWY)
 
     pygame.display.set_icon(cells[color][0])
 
@@ -31,8 +39,6 @@ def main(grid,color,config):
     moves = []
     animations = []
     beat = 0
-    reset_move_utils(WINDOWX,WINDOWY)
-    reset_renderer(WINDOWX,WINDOWY)
 
     try:
         while running:
