@@ -2,8 +2,7 @@
 
 This is a recreation of the game Slay, originally created by Sean O'Connor in 1995, But with over the internet* multiplayer using a server and client architecture
 
-This game is fully functional, although there a couple bugs to be squashed
-The help tab is not yet implemented
+This game is fully functional, although there are a couple bugs to be squashed and the help tab is not yet implemented
 
 There are some differences in gameplay:
 
