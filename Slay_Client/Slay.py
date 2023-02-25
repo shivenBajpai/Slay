@@ -22,10 +22,9 @@ def main(grid,color,config):
     pygame.display.flip()
 
     # They need pygame initialized first, so we import them later
-    from Sound_Utils import restart_mixer,loadSounds
+    from Sound_Utils import restart_mixer
 
-    restart_mixer()
-    loadSounds(config['VOL'])
+    restart_mixer(config['VOL'])
 
     from Renderer import cells,drawEntities,drawMapLayer,drawMouseEntity,drawBaseLayer,drawSideBar,reset_renderer
     from Move_Utils import handleEvent,get_mouse_entity,get_selected_city,set_selected_city,reset_move_utils

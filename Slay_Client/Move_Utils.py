@@ -4,7 +4,7 @@ from pygame import Rect, mouse
 from Constants import *
 from Hex_Utils import *
 from Networking import declareExit,is_our_turn
-from Sound_Utils import *
+import Sound_Utils
 import math
 import copy
 
@@ -93,11 +93,11 @@ def handleEvent(event,grid,moves,color):
                 for location in valid_locations:
                     grid[location[0]][location[1]].selected = True
 
-                pick_sound.play()
+                Sound_Utils.pick_sound.play()
 
         elif is_our_turn() and end_button_rect.collidepoint(mouse.get_pos()):
             moves.append('end')
-            click_sound.play()
+            Sound_Utils.click_sound.play()
 
         elif is_our_turn() and selected_city != None:
             for rect in shop_button_rects:
@@ -109,7 +109,7 @@ def handleEvent(event,grid,moves,color):
                     for location in valid_locations:
                         grid[location[0]][location[1]].selected = True
 
-                    pick_sound.play()
+                    Sound_Utils.pick_sound.play()
 
                     break
         
@@ -223,7 +223,7 @@ def handleEvent(event,grid,moves,color):
                 for location in valid_locations: grid[location[0]][location[1]].selected = False
                 valid_locations = None
 
-                drop_sound.play()
+                Sound_Utils.drop_sound.play()
 
                 if pick_up_pos is not None:
                     if mouse_pos != pick_up_pos:
