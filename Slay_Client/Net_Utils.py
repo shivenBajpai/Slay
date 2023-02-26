@@ -11,10 +11,22 @@ def send_message(socket,msg):
     time.sleep(0.1)
     return
     
-def recieve_message(socket):
+def fast_recieve_message(socket,debug=True):
     msglen = int(socket.recv(HEADERSIZE))
+    if debug: print(msglen)
     msg = pickle.loads(socket.recv(msglen))
     return msg
+    
+def recieve_message(socket,debug=True):
+    remaining = int(socket.recv(HEADERSIZE))
+    msg = b''
+    while remaining!=0:
+        if remaining > 2048: size = 2048
+        else: size = remaining
+        if debug: print('remaining',remaining,', pulling',size)
+        msg = msg + socket.recv(size)
+        remaining = remaining - size
+    return pickle.loads(msg)
 
 class Packet:
 

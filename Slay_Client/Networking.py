@@ -9,6 +9,8 @@ turn = 0 # corresponds to color/userid whose turn it is. This is not the same as
 color = 0
 client = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
 
+timeoutErrors = (TimeoutError,socket.timeout)
+
 discovery = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
 discovery.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 discovery.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
@@ -57,7 +59,7 @@ def connect(ip,port,password=None,info_req=False,):
             result = 'Failed to connect, \ninvalid server response:' + str(pack.code)
             disconnect()
 
-    except (ConnectionRefusedError,TimeoutError):
+    except (ConnectionRefusedError,TimeoutError,socket.timeout):
         print('Failed to connect, Server offline')
         result = 'Failed to connect,\nServer is offline or \nnot accepting connections'
         disconnect() # just in case of weird behaviour
@@ -78,7 +80,7 @@ def getGrid():
     client.settimeout(None)
 
     while grid is None:
-        pack = recieve_message(client)
+        pack = recieve_message(client,debug=True)
 
         if pack.code == Packet.LOAD:
             grid = pack.data['grid']
@@ -163,7 +165,7 @@ def getServers(servers,server_ips):
             if data.Address in server_ips: continue
             servers.append(data)
             server_ips.append(data.Address)
-    except TimeoutError: pass
+    except (TimeoutError,socket.timeout): pass
 
 def closeDiscovery():
     discovery.close()
