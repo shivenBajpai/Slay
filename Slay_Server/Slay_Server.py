@@ -23,7 +23,7 @@ discovery_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPRO
 discovery_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 discovery_socket.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
 discovery_socket.bind(("0.0.0.0", 5005))
-discovery_socket.settimeout(0.1)
+discovery_socket.settimeout(0.5)
 
 connections = {}
 
@@ -129,7 +129,7 @@ try:
                     else: 
                         print(f'invalid Packet by {addr}',pack.code,pack.data)
 
-                except TimeoutError:
+                except (TimeoutError,socket.timeout):
                     pass
 
             time.sleep(0.1)

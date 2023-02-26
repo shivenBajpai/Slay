@@ -12,10 +12,21 @@ def send_message(socket,msg):
     time.sleep(0.1)
     return
 
-def recieve_message(socket):
+def fast_recieve_message(socket):
     msglen = int(socket.recv(HEADERSIZE))
     msg = pickle.loads(socket.recv(msglen))
     return msg
+
+def recieve_message(socket,debug=True):
+    remaining = int(socket.recv(HEADERSIZE))
+    msg = b''
+    while remaining!=0:
+        if remaining > 2048: size = 2048
+        else: size = remaining
+        if debug: print('remaining',remaining,', pulling',size)
+        msg = msg + socket.recv(size)
+        remaining = remaining - size
+    return pickle.loads(msg)
 
 def broadcast(connections,message):
     for addr,conn in connections.items():
@@ -26,10 +37,12 @@ def handleDiscoveryRequests(sock,players,state):
         while True:
             try: 
                 data, _ = sock.recvfrom(1024)
+                print(data)
                 if data == b'discovery':
                     sock.sendto(pickle.dumps(ServerInfo(players,state)), ("255.255.255.255", 5005))
                 else: pass
-            except TimeoutError: break
+            except (TimeoutError,socket.timeout): 
+                break
 
 class Packet:
 
