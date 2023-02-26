@@ -37,7 +37,6 @@ def handleDiscoveryRequests(sock,players,state):
         while True:
             try: 
                 data, _ = sock.recvfrom(1024)
-                print(data)
                 if data == b'discovery':
                     sock.sendto(pickle.dumps(ServerInfo(players,state)), ("255.255.255.255", 5005))
                 else: pass
