@@ -23,7 +23,6 @@ def recieve_message(socket,debug=True):
     while remaining!=0:
         if remaining > 2048: size = 2048
         else: size = remaining
-        if debug: print('remaining',remaining,', pulling',size)
         msg = msg + socket.recv(size)
         remaining = remaining - size
     return pickle.loads(msg)

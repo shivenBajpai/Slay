@@ -6,8 +6,21 @@ from Constants import *
 from math import floor
 import Hex_Utils
 
-def main(grid,color,config):
+def main(color,config):
 
+    screen = pygame.display.set_mode([640, 480])
+    pygame.display.set_caption('Slay')
+
+    screen.fill((48,48,48))
+    screen.blit(pygame.image.load('./Slay_Assets/waiting_text.png'),(0,0))
+    pygame.display.flip()
+    
+    try: 
+        grid = getGrid(pygame.event.poll)
+    except GridLoadException as err: 
+        pygame.quit()
+        return 'Failed to load game: ' + str(err), False
+        
     Hex_Utils.xsize = config['XSIZE']
     Hex_Utils.ysize = config['YSIZE']
     WINDOWX = (config['XSIZE']+1)*48 + 32 

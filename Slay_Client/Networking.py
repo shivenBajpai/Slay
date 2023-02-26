@@ -1,7 +1,7 @@
 from Net_Utils import *
 from Hex_Utils import fixHighlighting
 from Constants import NAME_MAPPING
-from time import sleep
+from pygame.locals import QUIT
 import socket
 import traceback as tb
 
@@ -20,6 +20,8 @@ discovery.settimeout(0.1)
 class GameEndingException(Exception): ...
 
 class GameFinishedException(Exception): ...
+
+class GridLoadException(Exception): ...
 
 def connect(ip,port,password=None,info_req=False,):
 
@@ -74,22 +76,26 @@ def connect(ip,port,password=None,info_req=False,):
 
     return result, userid, config
 
-def getGrid():
+def getGrid(event_getter):
     grid = None
-
-    client.settimeout(None)
+    client.settimeout(0.01)
 
     while grid is None:
-        pack = recieve_message(client,debug=True)
+        try:
+            pack = recieve_message(client,debug=True)
 
-        if pack.code == Packet.LOAD:
-            grid = pack.data['grid']
-            print('Succesfully recieved grid data')
-        else:
-            print('Unexpected server response, expected grid data',pack.code,pack.data)
-            raise Exception()
-
-    client.settimeout(0.02)
+            if pack.code == Packet.LOAD:
+                grid = pack.data['grid']
+                print('Succesfully recieved grid data')
+            else:
+                print('Unexpected server response, expected grid data',pack.code,pack.data)
+                raise GridLoadException(pack.data)
+            
+        except (TimeoutError,socket.timeout): pass
+        finally: 
+            if event_getter().type == QUIT: 
+                declareExit()
+                raise GridLoadException('User quit')
 
     return grid
 

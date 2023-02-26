@@ -36,7 +36,7 @@ while True:
         conn, addr = server_socket.accept()
         print('connection from:',addr)
         pack = recieve_message(conn)
-        conn.settimeout(1)
+        conn.settimeout(0.1)
         if pack.__class__ != Packet: 
             print('illegal, bounced')
             conn.close()
@@ -65,6 +65,25 @@ while True:
         pass
     finally:
         handleDiscoveryRequests(discovery_socket,len(connections),ServerInfo.WAITING)
+
+    for addr, conn in connections.items():
+        try:
+            pack = recieve_message(conn)
+            if pack.code == Packet.LEAVE:
+                print(f'Leave request from {addr}',pack.code,pack.data)
+                raise PlayerDisconnectException(addr)
+        except (TimeoutError,socket.timeout): pass
+        except PlayerDisconnectException as err:
+            addr = err.args[0]
+            player = COLOR_MAPPING[list(connections.keys()).index(addr)]
+            for conn in connections.values():
+                try:
+                    send_message(conn,Packet(
+                        Packet.DISCONNECT,
+                        {'error':f'{player} disconnected'}
+                    ))
+                except Exception: pass
+            sys.exit(f'Known Disconnect by {player}, {addr}! Shutting down...')            
 
 # Send initial grid to connections
 for addr in connections:

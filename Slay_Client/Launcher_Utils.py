@@ -165,18 +165,13 @@ class MainWindow:
     def StartGame(self,x=None,custom=True) -> None:
         self.window.event_generate('<<DisableUI>>')
         try: del self.connection_window
-        except (Exception) as err: 
-            # TODO remove this logging
-            print(err)
-            pass
+        except (Exception) as err: pass
         print('Game Start initiated')
         if custom:
             info = connect(self.custom_server[0],self.custom_server[1],info_req=True)
             if not info['public']: PasswordPopUp(self.window,(self.run,self.custom_server))
             else: self.run(self.custom_server)
         else:
-            print(self.gameslist)
-            print(self.selected_server)
             if not self.gameslist[int(self.selected_server[0])][1]:
                 PasswordPopUp(self.window,(self.run,self.gameslist[int(self.selected_server[0])][0]))
             self.run(self.gameslist[int(self.selected_server[0])][0])
@@ -215,14 +210,10 @@ class MainWindow:
 
         result, color, config = connect(ip,port,password=password)
 
-        self.status.set(result)
         if color == None:
+            self.status.set(result)
             self.window.event_generate('<<EnableUI>>')
             return
-        self.window.update_idletasks()
-        self.window.update()
-
-        grid = getGrid()
 
         self.status.set('Running')
         self.status_label.configure(foreground='green')
@@ -230,16 +221,7 @@ class MainWindow:
         self.window.update()
 
         config['VOL'] = self.volume/100
-        self.executor.submit(main,grid,color,config).add_done_callback(self.handleGameReturn)
-        '''result, success = main(grid,color,config)
-
-        disconnect()
-        self.raise_above_all()
-
-        self.status.set(result)
-        if success: self.status_label.configure(foreground='green')
-        else: self.status_label.configure(foreground='red')
-        self.window.event_generate('<<EnableUI>>')'''
+        self.executor.submit(main,color,config).add_done_callback(self.handleGameReturn)
 
     def EnableUI(self,x=None):
         self.disabled = False
