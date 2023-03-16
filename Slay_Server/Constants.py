@@ -46,7 +46,7 @@ try:
     YSIZE = int(config['BASIC']['MapYSize'])
     MAX_COLOR = int(config['BASIC']['NumberOfPlayers'])
     IP = config['ADVANCED']['IP']
-    DISCOVERABLE = bool(config['DISCOVERY']['EnableDiscovery'])
+    DISCOVERABLE = config['DISCOVERY']['EnableDiscovery'] == 'True'
     NAME = config['DISCOVERY']['DiscoveryServerName']
     PASSWORD = config['DISCOVERY']['Password']
     PUBLIC = len(PASSWORD) == 0

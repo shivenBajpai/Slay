@@ -1,5 +1,6 @@
 from TextureLoader import entities
 from pygame.locals import QUIT, MOUSEMOTION, MOUSEBUTTONDOWN, MOUSEBUTTONUP
+from Debugger import DEBUG,SetDebugPos
 from pygame import Rect, mouse
 from Constants import *
 from Hex_Utils import *
@@ -76,6 +77,9 @@ def handleEvent(event,grid,moves,color):
                     grid[cell[0]][cell[1]].selected = False
 
         if mouse_on_grid:
+
+            if DEBUG:
+                SetDebugPos(mouse_pos)
 
             if grid[mouse_pos[0]][mouse_pos[1]].color == color:
                 selected_city = grid[mouse_pos[0]][mouse_pos[1]].hall_loc

@@ -3,6 +3,7 @@ with contextlib.redirect_stdout(None): import pygame
 import traceback as tb
 from Networking import *
 from Constants import *
+from Debugger import DEBUG,FREEZE,HandleFreezing,GetDebugPos
 from math import floor
 import Hex_Utils
 
@@ -27,7 +28,8 @@ def main(color,config):
     WINDOWY = (config['YSIZE']+1)*36 + 24
     if WINDOWY<YMIN: WINDOWY = YMIN
 
-    screen = pygame.display.set_mode([WINDOWX+ 200, WINDOWY])
+    if DEBUG: screen = pygame.display.set_mode([WINDOWX+200, WINDOWY+200])
+    else: screen = pygame.display.set_mode([WINDOWX+200, WINDOWY])
     pygame.display.set_caption('Slay')
 
     screen.fill((48,48,48))
@@ -39,7 +41,7 @@ def main(color,config):
 
     restart_mixer(config['VOL'])
 
-    from Renderer import cells,drawEntities,drawMapLayer,drawMouseEntity,drawBaseLayer,drawSideBar,reset_renderer
+    from Renderer import cells,drawEntities,drawMapLayer,drawMouseEntity,drawBaseLayer,drawSideBar,reset_renderer,drawDebugger
     from Move_Utils import handleEvent,get_mouse_entity,get_selected_city,set_selected_city,reset_move_utils
 
     reset_move_utils(WINDOWX,WINDOWY)
@@ -70,6 +72,7 @@ def main(color,config):
             drawEntities(screen, grid, floor(beat/2)%2==0, color)
             drawSideBar(screen, grid, get_selected_city(), WINDOWX, WINDOWY, color)
             drawMouseEntity(screen, get_mouse_entity(), pygame.mouse.get_pos())
+            if DEBUG: drawDebugger(screen,grid,GetDebugPos(),WINDOWY,WINDOWX)
 
             for index, animation in enumerate(animations):
                 if animation.animation.animate(screen): 
@@ -81,14 +84,17 @@ def main(color,config):
             time.sleep(1/100)
 
     except GameEndingException as err:
+        HandleFreezing('Slay - Frozen - GameEndingException',err)
         pygame.quit()
         return 'Error: ' + str(err), False
 
     except GameFinishedException as err:
+        HandleFreezing('Slay - Frozen - Game Finished','')
         pygame.quit()
         return str(err), True
 
     except Exception as err:
+        HandleFreezing('Slay - Frozen - Exception',err)
         pygame.quit()
         print(err)
         tb.print_exc()

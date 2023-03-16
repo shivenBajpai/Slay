@@ -17,6 +17,7 @@ def reset_renderer(WINDOWX,WINDOWY):
     roboto = pygame.font.Font('./Slay_Assets/RobotoMono-VariableFont_wght.ttf',13)
     debug = pygame.font.Font('./Slay_Assets/RobotoMono-VariableFont_wght.ttf',10)
 
+# Gives X position to center text ON SIDERBAR
 def center(text,font):
     dimensions = font.size(text)
     return (200-dimensions[0])/2
@@ -137,3 +138,43 @@ def drawMouseEntity(screen :pygame.Surface,entity,pos):
     if entity == 0: return
     screen.blit(entities[entity],(pos[0]-24,pos[1]-24))
     return
+
+def writeLandArray(land,max_len,x,y,screen):
+    formattedLines = ['']
+    linesize = 0
+    for i in land:
+        item = str(i)+','
+        itemsize = roboto.size(item)[0]
+        if linesize+itemsize > max_len:
+            formattedLines.append(item)
+            linesize=itemsize
+        else:
+            formattedLines[-1] += item
+            linesize+=itemsize
+
+    for idx, line in enumerate(formattedLines):
+        screen.blit(roboto.render(line,True,(255,255,255)),(x,y+idx*20))
+
+def drawDebugger(screen :pygame.Surface, grid, debug_pos, WINDOWY, WINDOWX):
+    screen.fill((223, 100, 227),pygame.Rect(0,WINDOWY,WINDOWX+200,200)) # magenta bg
+    screen.fill((255, 255, 255),pygame.Rect(5,WINDOWY+5,WINDOWX+190,190)) # white box
+    screen.fill((223, 100, 227),pygame.Rect(7,WINDOWY+7,WINDOWX+186,186)) # magenta fill
+    screen.fill((223, 100, 227),pygame.Rect((WINDOWX+200-50)/2,WINDOWY+5,50,2)) # text bg
+    screen.blit(roboto.render('DEBUG',True,(255,255,255)),((WINDOWX+200-40)/2,WINDOWY))
+
+    #Highlight cell
+    if debug_pos[1]%2==1:
+        screen.blit(debugOverlay,((debug_pos[0]+0.5)*48,debug_pos[1]*36))
+    else:
+        screen.blit(debugOverlay,(debug_pos[0]*48,debug_pos[1]*36))
+
+    # Writing out the actual info
+    screen.blit(roboto.render(f'Position: {debug_pos}',True,(255,255,255)),(50,WINDOWY+20))
+    screen.blit(roboto.render(f'Entity: {grid[debug_pos[0]][debug_pos[1]].entity}',True,(255,255,255)),(50,WINDOWY+40))
+    screen.blit(roboto.render(f'Hall_loc: {grid[debug_pos[0]][debug_pos[1]].hall_loc}',True,(255,255,255)),(50,WINDOWY+60))
+    screen.blit(roboto.render(f'Land: ',True,(255,255,255)),(50,WINDOWY+80))
+    writeLandArray(grid[debug_pos[0]][debug_pos[1]].land,WINDOWX+100,90,WINDOWY+80,screen)
+    screen.blit(roboto.render(f'Playable: {grid[debug_pos[0]][debug_pos[1]].playable}',True,(255,255,255)),((WINDOWX+250)/2,WINDOWY+20))
+    screen.blit(roboto.render(f'Security Level: {grid[debug_pos[0]][debug_pos[1]].security}',True,(255,255,255)),((WINDOWX+250)/2,WINDOWY+40))
+    screen.blit(roboto.render(f'Security Providers: {grid[debug_pos[0]][debug_pos[1]].security_providers}',True,(255,255,255)),((WINDOWX+250)/2,WINDOWY+60))
+    
