@@ -148,7 +148,6 @@ def roundupdate(grid):
                         appendifnotAppended(affected_cells,[grid[x][y].hall_loc])
 
             else: #Its a unit
-                print('set',x,y,'to playable')
                 grid[x][y].playable = True
                 affected_cells.append((x,y))
     

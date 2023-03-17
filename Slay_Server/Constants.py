@@ -17,6 +17,9 @@ MapYSize = 15
 # Number of players needed for the game
 NumberOfPlayers = 2
 
+# Automatically-Relaunch server every time game ends/crashes
+AutoReboot = False
+
 [DISCOVERY]
 # Allow other computers on the local network to find and connect to this server
 # If set to False, all discovery related options are meaningless
@@ -45,6 +48,7 @@ try:
     XSIZE = int(config['BASIC']['MapXSize'])
     YSIZE = int(config['BASIC']['MapYSize'])
     MAX_COLOR = int(config['BASIC']['NumberOfPlayers'])
+    AUTOREBOOT = config['BASIC']['AutoReboot'] == 'True'
     IP = config['ADVANCED']['IP']
     DISCOVERABLE = config['DISCOVERY']['EnableDiscovery'] == 'True'
     NAME = config['DISCOVERY']['DiscoveryServerName']
