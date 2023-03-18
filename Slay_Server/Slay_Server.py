@@ -235,3 +235,6 @@ def main():
         return err
 
     return 0
+
+if __name__ == '__main__':
+    print(f'Server stopped with code/result: {main()}')

@@ -1,7 +1,10 @@
 <h1>SERVER INFO:</h1>
 
-There should be a `config.ini` in the same directory as `Slay_Server.py` when you run it.
+There should be a `config.ini` in this directory when you run it.
 If it does not exist, it will automatically generate this file and then exit, Run it again to then launch the server
+
+It is recommended to run the server via `Supervisor.py` rather than running `Slay_Server.py`
+The built executable will always run via `Supervisor.py`
 
 Config options are explained in the config file itself via comments
 
