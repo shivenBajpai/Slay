@@ -8,7 +8,7 @@ a = Analysis(
     ['Launcher.py'],
     pathex=[],
     binaries=[],
-    datas=[('README.md', '.'), ('Slay_Assets', 'Slay_Assets'), ('icon.ico', '.')],
+    datas=[('README.md', '.'), ('Slay_Assets', 'Slay_Assets'), ('replays', 'replays'), ('icon.ico', '.')],
     hiddenimports=[],
     hookspath=[],
     hooksconfig={},
