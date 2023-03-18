@@ -120,6 +120,7 @@ def network(moves,grid,animations,color,selected_city,set_selected_city,replayFi
 
     try:
         pack = recieve_message(client)
+        replayFile.writeNext(pack)
 
         if pack.code == Packet.DISCONNECT:
             print('Connection terminated by server')
@@ -150,8 +151,6 @@ def network(moves,grid,animations,color,selected_city,set_selected_city,replayFi
             print('Invalid server response:', pack.code, pack.data)
             send_message(client,Packet(Packet.LEAVE,{'cause':'Invalid server Response'}))
             client.close()
-        
-        replayFile.writeNext(pack)
 
     except (TimeoutError,socket.timeout): pass
     except (ConnectionAbortedError,ConnectionResetError): raise GameEndingException('Server terminated connection,\nNo context')
