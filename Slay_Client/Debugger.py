@@ -5,6 +5,10 @@ from pygame.constants import QUIT
 
 DebugPos = (1,1)
 
+DEFAULTCONFIG = '''[DEBUG]
+EnableDebugger = False
+FreezeOnCrash = False'''
+
 if os.path.exists('./config.ini'):
     config = configparser.ConfigParser()
     config.read('config.ini')
@@ -13,6 +17,7 @@ if os.path.exists('./config.ini'):
 else:
     DEBUG = False
     FREEZE = False
+    with open('./config.ini','x') as f: f.write(DEFAULTCONFIG) 
 
 def HandleFreezing(caption,err):
     if FREEZE: 

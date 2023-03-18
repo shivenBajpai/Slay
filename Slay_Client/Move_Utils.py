@@ -17,10 +17,11 @@ pick_up_pos = None
 mouse_on_grid = False
 shop_button_rects = []
 end_button_rect = None
+next_button_rect = None
 selected_city = None
 
 def reset_move_utils(WINDOWX,WINDOWY):
-    global mouse_pos, mousedown, mouse_entity, valid_locations, pick_up_pos, shop_button_rects, selected_city, mouse_on_grid, end_button_rect
+    global mouse_pos, mousedown, mouse_entity, valid_locations, pick_up_pos, shop_button_rects, selected_city, mouse_on_grid, end_button_rect, next_button_rect
     mouse_pos = (0,0)
     mousedown = False
     mouse_on_grid = False
@@ -36,6 +37,7 @@ def reset_move_utils(WINDOWX,WINDOWY):
         (Rect((WINDOWX+23,255),(48,48)),40,KNIGHT)
     ) # (Bounding Box, Cost, Entity)
     end_button_rect = Rect((WINDOWX + 33,WINDOWY-50),(134,33))
+    next_button_rect = Rect((WINDOWX + 33,WINDOWY-50),(134,33))
 
 def get_mouse_entity():
     return mouse_entity
@@ -60,6 +62,19 @@ def getpoints(a,b,n):
         ))
     return points
 
+def handleReplayEvent(event,moves):
+    global mouse_pos, mouse_on_grid
+    if event.type == QUIT: raise Exception('User Exited Replay')
+
+    elif event.type == MOUSEMOTION: mouse_pos, mouse_on_grid = cursor_on_grid(mouse_pos)
+
+    elif event.type == MOUSEBUTTONDOWN and event.button == 1:
+
+        if DEBUG: SetDebugPos(mouse_pos)
+
+        if next_button_rect.collidepoint(mouse.get_pos()):
+            moves.append('next')
+
 def handleEvent(event,grid,moves,color):
 
     global mouse_pos, mousedown, mouse_entity, valid_locations, pick_up_pos, selected_city, mouse_on_grid
@@ -78,12 +93,10 @@ def handleEvent(event,grid,moves,color):
 
         if mouse_on_grid:
 
-            if DEBUG:
-                SetDebugPos(mouse_pos)
+            if DEBUG: SetDebugPos(mouse_pos)
 
             if grid[mouse_pos[0]][mouse_pos[1]].color == color:
                 selected_city = grid[mouse_pos[0]][mouse_pos[1]].hall_loc
-
             else:
                 selected_city = None
 

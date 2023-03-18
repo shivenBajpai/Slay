@@ -127,6 +127,7 @@ def getValidPlacementSpots(hall_pos,grid,entity):
 
     return valid
 
+# Returns list of adjacent cells to captured cell, that are allied and captured under a different city
 def GetConnectingTerritories(mouse_pos,grid,color,selected_city):
     connecting = []
     for cell in verify(neighbours(mouse_pos[0],mouse_pos[1],1)):

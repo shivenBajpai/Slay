@@ -1,5 +1,6 @@
 temp/
 */__pycache__/
+*.bin
 *.ini
 /.vscode
 */build/

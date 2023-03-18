@@ -4,6 +4,7 @@ import traceback as tb
 from Networking import *
 from Constants import *
 from Debugger import DEBUG,FREEZE,HandleFreezing,GetDebugPos
+from Replay_Utils import Replay
 from math import floor
 import Hex_Utils
 
@@ -16,8 +17,11 @@ def main(color,config):
     screen.blit(pygame.image.load('./Slay_Assets/waiting_text.png'),(0,0))
     pygame.display.flip()
     
+    replayFile = Replay()
+    replayFile.writeNext(config)
+
     try: 
-        grid = getGrid(pygame.event.poll)
+        grid = getGrid(pygame.event.poll,replayFile)
     except GridLoadException as err: 
         pygame.quit()
         return 'Failed to load game: ' + str(err), False
@@ -49,13 +53,12 @@ def main(color,config):
 
     pygame.display.set_icon(cells[color][0])
 
-    running = True
     moves = []
     animations = []
     beat = 0
 
     try:
-        while running:
+        while True:
 
             beat += 0.2
             if beat == 20: beat = 0 #beat loops from 0 to 19
@@ -64,7 +67,7 @@ def main(color,config):
             for event in pygame.event.get(): handleEvent(event,grid,moves,color)
                 
             # talk to server
-            network(moves,grid,animations,color,get_selected_city(),set_selected_city)
+            network(moves,grid,animations,color,get_selected_city(),set_selected_city,replayFile)
 
             # draw
             drawBaseLayer(screen,WINDOWX,WINDOWY)
@@ -84,16 +87,19 @@ def main(color,config):
             time.sleep(1/100)
 
     except GameEndingException as err:
+        replayFile.close()
         HandleFreezing('Slay - Frozen - GameEndingException',err)
         pygame.quit()
         return 'Error: ' + str(err), False
 
     except GameFinishedException as err:
+        replayFile.close()
         HandleFreezing('Slay - Frozen - Game Finished','')
         pygame.quit()
         return str(err), True
 
     except Exception as err:
+        replayFile.close()
         HandleFreezing('Slay - Frozen - Exception',err)
         pygame.quit()
         print(err)

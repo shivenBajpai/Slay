@@ -1,8 +1,10 @@
 from tkinter import *
 from tkinter import ttk
 from concurrent.futures import ThreadPoolExecutor
-from Slay import main
-from Networking import connect, getGrid, disconnect, closeDiscovery, getServers
+import Slay
+import Replayer
+from Replay_Utils import getReplays
+from Networking import connect, disconnect, closeDiscovery, getServers
 from Net_Utils import status,type,address,players
 from socket import gethostbyname
 
@@ -59,6 +61,9 @@ class MainWindow:
 
         self.credits_button = ttk.Button(self.buttonframe, text='Credits', command=self.CreditsButtonPress, padding='0 2 0 2',width=30)
         self.credits_button.grid(column=2,row=2,sticky=(E),padx=(8,8),pady=(8,0))
+
+        self.replays_button = ttk.Button(self.buttonframe, text='Replays', command=self.ReplayButtonPress, padding='0 2 0 2',width=30)
+        self.replays_button.grid(column=3,row=2,sticky=(E),pady=(8,0))
 
         self.status = StringVar()
         self.status_label = ttk.Label(self.mainframe,textvariable=self.status,padding='0 8 0 0')
@@ -162,6 +167,16 @@ class MainWindow:
         self.window.event_generate('<<DisableUI>>')
         CreditsWindow(self.window)
 
+    def ReplayButtonPress(self) -> None:
+        self.window.event_generate('<<DisableUI>>')
+        ReplayWindow(self.window,self.StartReplay)
+
+    def StartReplay(self,selection) -> None:
+        self.window.event_generate('<<DisableUI>>')
+        self.status.set('Playing Replay')
+        self.status_label.configure(foreground='green')
+        self.executor.submit(Replayer.main,selection).add_done_callback(self.handleGameReturn)
+
     def StartGame(self,x=None,custom=True) -> None:
         self.window.event_generate('<<DisableUI>>')
         try: del self.connection_window
@@ -221,7 +236,7 @@ class MainWindow:
         self.window.update()
 
         config['VOL'] = self.volume/100
-        self.executor.submit(main,color,config).add_done_callback(self.handleGameReturn)
+        self.executor.submit(Slay.main,color,config).add_done_callback(self.handleGameReturn)
 
     def EnableUI(self,x=None):
         self.disabled = False
@@ -230,6 +245,7 @@ class MainWindow:
         self.settings_button.configure(state='enabled')
         self.help_button.configure(state='enabled')
         self.credits_button.configure(state='enabled')
+        self.replays_button.configure(state='enabled')
         self.tree.configure(selectmode='browse')
 
     def DisableUI(self,x=None):
@@ -239,6 +255,7 @@ class MainWindow:
         self.settings_button.configure(state='disabled')
         self.help_button.configure(state='disabled')
         self.credits_button.configure(state='disabled')
+        self.replays_button.configure(state='disabled')
         self.tree.configure(selectmode='none')
         self.window.update_idletasks()
 
@@ -376,6 +393,57 @@ class SettingsWindow:
         self.window.destroy()
 
 class HelpWindow: ...
+
+class ReplayWindow:
+    def __init__(self,mainWindow,playFunction) -> None:
+        self.mainWindow = mainWindow
+        self.playFunction = playFunction
+        self.selection = None
+
+        self.window = Toplevel(mainWindow)
+        self.window.title('Slay - Replays')
+        self.window.iconbitmap('icon.ico')
+        self.window.resizable(False,False)
+        self.window.columnconfigure(0, weight=1)
+        self.window.rowconfigure(0, weight=1)
+        self.window.protocol("WM_DELETE_WINDOW", self.windowClosed)
+
+        self.mainframe = ttk.Frame(self.window,padding="3 3 12 12")
+        self.mainframe.grid(column=0, row=0, sticky=(N, W, E, S))
+
+        self.header = ttk.Label(self.mainframe,text='Replays',font=('Helvetica',22),padding='50 25 50 15')
+        self.header.grid(column=1,row=1,columnspan=3,sticky=(N))
+
+        self.infotext = ttk.Label(self.mainframe,text='Select a replay by date:',font=('Helvetica',8))
+        self.infotext.grid(column=1,row=2,columnspan=1,sticky=(W),padx=(15,0),pady=(5,5))
+
+        self.replayList = getReplays()
+        self.listbox = Listbox(self.mainframe,height=8,width=40)
+        self.listbox.grid(column=1,row=3,sticky=(N),pady=(5,5),padx=(5,5))
+        self.listbox.configure(selectmode='browse')
+        self.listbox.bind('<<ListboxSelect>>',self.selectionHandler)
+        for item in self.replayList: self.listbox.insert('end',item)
+
+        self.confirmBox = ttk.Button(self.mainframe,command=self.confirmPress,text='Play')
+        self.confirmBox.grid(column=1,row=4,sticky=(N),pady=(5,5))
+
+        self.window.mainloop()
+    
+    def confirmPress(self) -> None:
+        self.windowClosed()
+        self.playFunction(self.selection)
+
+    def selectionHandler(self,_) -> None:
+        if len(self.listbox.curselection()) == 0: 
+            self.selection = None
+            self.confirmBox.configure(state='disabled')
+        else:
+            self.selection = self.replayList[self.listbox.curselection()[0]]
+            self.confirmBox.configure(state='enabled')
+
+    def windowClosed(self) -> None:
+        self.mainWindow.event_generate('<<EnableUI>>')
+        self.window.destroy()
 
 class CreditsWindow:
     def __init__(self,mainWindow: Toplevel) -> None:

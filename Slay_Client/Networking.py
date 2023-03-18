@@ -76,7 +76,7 @@ def connect(ip,port,password=None,info_req=False,):
 
     return result, userid, config
 
-def getGrid(event_getter):
+def getGrid(event_getter,replayFile):
     grid = None
     client.settimeout(0.01)
 
@@ -87,6 +87,7 @@ def getGrid(event_getter):
             if pack.code == Packet.LOAD:
                 grid = pack.data['grid']
                 print('Succesfully recieved grid data')
+                replayFile.writeNext(grid)
             else:
                 print('Unexpected server response, expected grid data',pack.code,pack.data)
                 raise GridLoadException(pack.data)
@@ -113,7 +114,7 @@ def is_our_turn():
 def get_turn():
     return turn
 
-def network(moves,grid,animations,color,selected_city,set_selected_city):
+def network(moves,grid,animations,color,selected_city,set_selected_city,replayFile):
 
     global our_turn, turn
 
@@ -149,6 +150,8 @@ def network(moves,grid,animations,color,selected_city,set_selected_city):
             print('Invalid server response:', pack.code, pack.data)
             send_message(client,Packet(Packet.LEAVE,{'cause':'Invalid server Response'}))
             client.close()
+        
+        replayFile.writeNext(pack)
 
     except (TimeoutError,socket.timeout): pass
     except (ConnectionAbortedError,ConnectionResetError): raise GameEndingException('Server terminated connection,\nNo context')

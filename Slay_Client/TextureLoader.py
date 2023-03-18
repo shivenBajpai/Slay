@@ -63,5 +63,9 @@ buttons.append([
     pygame.image.load('./Slay_Assets/end_turn_hover.png').convert_alpha(),
     pygame.image.load('./Slay_Assets/end_turn_disabled.png').convert_alpha()
 ])
+buttons.append([
+    pygame.image.load('./Slay_Assets/next_turn.png').convert_alpha(),
+    pygame.image.load('./Slay_Assets/next_turn_hover.png').convert_alpha()
+])
 
 debugOverlay = pygame.image.load('./Slay_Assets/debug_overlay.png').convert_alpha()

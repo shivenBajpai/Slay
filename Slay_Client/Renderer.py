@@ -72,6 +72,14 @@ def drawShopWindow(screen,WINDOWX,gold):
 
     return height
 
+def drawReplaySideBar(screen :pygame.Surface,grid,WINDOWX,WINDOWY):
+
+    global end_button_rect
+
+    #Next Turn button
+    if end_button_rect.collidepoint(pygame.mouse.get_pos()): screen.blit(buttons[1][1],(WINDOWX + 33,WINDOWY-50))
+    else: screen.blit(buttons[1][0],(WINDOWX + 33,WINDOWY-50))
+
 def drawSideBar(screen :pygame.Surface,grid,selected,WINDOWX,WINDOWY,color):
 
     global end_button_rect
@@ -111,15 +119,15 @@ def drawSideBar(screen :pygame.Surface,grid,selected,WINDOWX,WINDOWY,color):
     screen.blit(roboto.render(f'Net{grid[selected[0]][selected[1]].net:>16}',True,(0,0,0)),(WINDOWX+25,offset+155))
     return
 
-def drawMapLayer(screen :pygame.Surface, grid, blink: bool):
+def drawMapLayer(screen :pygame.Surface, grid, blink: bool, renderSelections: bool = True):
     for y in range (0,len(grid[0])):
         for x in range(0,len(grid)):
             if (y%2==1):
-                screen.blit(cells[grid[x][y].color][grid[x][y].selected or (blink and grid[x][y].blink)],((x+0.5)*48,y*36))
-                #screen.blit(debug.render(str(grid[x][y].security),True,(255,255,50)),((x+1)*48,y*36))
+                screen.blit(cells[grid[x][y].color][(grid[x][y].selected or (blink and grid[x][y].blink)) and renderSelections],((x+0.5)*48,y*36))
+                screen.blit(debug.render(f'{x},{y}',True,(255,255,50)),((x+1)*48-8,y*36))
             else:
-                screen.blit(cells[grid[x][y].color][grid[x][y].selected or (blink and grid[x][y].blink)],(x*48,y*36))
-                #screen.blit(debug.render(str(grid[x][y].security),True,(255,255,50)),((x+0.5)*48,y*36))
+                screen.blit(cells[grid[x][y].color][(grid[x][y].selected or (blink and grid[x][y].blink)) and renderSelections],(x*48,y*36))
+                screen.blit(debug.render(f'{x},{y}',True,(255,255,50)),((x+0.5)*48-8,y*36))
     return
 
 def drawEntities(screen :pygame.Surface, grid, beat: int, color: int):
