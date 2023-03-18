@@ -92,7 +92,17 @@ def main():
                                     {'error':f'{player} disconnected'}
                                 ))
                             except Exception: pass
-                        return(f'Known Disconnect by {player}, {addr}! Shutting down...')            
+                        return(f'Known Disconnect by {player}, {addr}! Shutting down...')
+                    except Exception as err:
+                        print(err)
+                        for conn in connections.values():
+                            try:
+                                send_message(conn,Packet(
+                                    Packet.DISCONNECT,
+                                    {'error':f'Fatal Server Error'}
+                                ))
+                            except Exception: pass
+                        return(f'Fatal Error! Shutting down...')              
 
         # Send initial grid to connections
         for addr in connections:
