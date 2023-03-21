@@ -32,7 +32,6 @@ class Replay:
     def readNext(self):
         if not self.reading: raise Exception('Trying to read from a incomplete replay')
         return next(self.generator)
-        #TODO: Deal with StopIteration exception
     
     def writeNext(self,pack):
         if self.reading: raise Exception('Trying to write to a pre-existing replay')

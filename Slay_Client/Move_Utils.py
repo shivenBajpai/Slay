@@ -152,7 +152,7 @@ def handleEvent(event,grid,moves,color):
                     affected_cells.append(selected_city)
                     affected_cells.extend(verify(neighbours(mouse_pos[0],mouse_pos[1],1)))
                     queued_security_updates.append(mouse_pos)
-                    wage_change = math.floor(2*(3**(mouse_entity-MAN+1))-2*(3**(mouse_entity-MAN)))
+                    wage_change = math.floor(2*(3**(mouse_entity-MAN+1))-2*(3**(mouse_entity-MAN)))*(1 if pick_up_pos is None else 2)
                     grid[selected_city[0]][selected_city[1]].wages += wage_change
                     grid[selected_city[0]][selected_city[1]].net -= wage_change
 
@@ -219,10 +219,11 @@ def handleEvent(event,grid,moves,color):
                         if selected_city not in affected_cells: affected_cells.append(selected_city)
                         queued_security_updates.append(mouse_pos)
                         appendifnotAppended(affected_cells,verify(neighbours(mouse_pos[0],mouse_pos[1],1)))
-                        wage_change = math.floor(2*(3**(mouse_entity-MAN)))
+                        wage_change = math.floor(2*(3**(mouse_entity-MAN))) if mouse_entity != TOWER else 0
+                        cost = (mouse_entity-CITY)*10 if mouse_entity != TOWER else 15
                         grid[selected_city[0]][selected_city[1]].wages += wage_change
-                        grid[selected_city[0]][selected_city[1]].gold -= (mouse_entity-CITY)*10
-                        grid[selected_city[0]][selected_city[1]].net -= wage_change + (mouse_entity-CITY)*10
+                        grid[selected_city[0]][selected_city[1]].gold -= cost
+                        grid[selected_city[0]][selected_city[1]].net -= wage_change + cost
 
                     grid[mouse_pos[0]][mouse_pos[1]].hall_loc = selected_city
                     grid[mouse_pos[0]][mouse_pos[1]].entity = mouse_entity
