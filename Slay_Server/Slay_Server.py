@@ -1,18 +1,20 @@
 import socket
 import copy
-import sys
+import AI_Player
+import traceback as tb
 from Net_Utils import *
 from Constants import *
 from Hex_Utils import *
 from Move_Utils import Move, GameUpdate
 
 server_socket,discovery_socket = None,None
+MAX_CLIENTS = MAX_COLOR - BOTS
 
 def reset_sockets():
     global server_socket,discovery_socket
     server_socket = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
     server_socket.bind((IP,PORT))
-    server_socket.listen(MAX_COLOR+1)
+    server_socket.listen(MAX_CLIENTS+1)
     server_socket.settimeout(0.1)
 
     discovery_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
@@ -69,7 +71,7 @@ def main():
                         Packet.ID,
                         {'id':len(connections),'config':{'XSIZE':XSIZE,'YSIZE':YSIZE}}    
                     ))
-                    if len(connections) == MAX_COLOR: break
+                    if len(connections) == MAX_CLIENTS: break
                 except Exception:
                     pass
                 finally:
@@ -158,6 +160,15 @@ def main():
                             if list(connections.keys()).index(addr) == turn:
 
                                 turn += 1
+                                print(f'new value of turn is {turn}')
+
+                                while turn < len(activePlayers) and activePlayers[turn]>MAX_CLIENTS:
+                                    print('AI Called')
+                                    broadcast(connections,Packet(Packet.PLAY,{'turn':activePlayers[turn]}))
+                                    movePacket = AI_Player.play(serverside_grid,activePlayers[turn])
+                                    broadcast(connections,movePacket)
+                                    turn += 1
+
                                 if turn == len(activePlayers): 
                                     turn = 0
                                     move = Move({'source':0},GameUpdate([]),None,GameUpdate([]))
@@ -180,9 +191,10 @@ def main():
                         pass
 
                 time.sleep(0.1)
-                handleDiscoveryRequests(discovery_socket,MAX_COLOR,ServerInfo.IN_GAME)
+                handleDiscoveryRequests(discovery_socket,MAX_CLIENTS,ServerInfo.IN_GAME)
 
-    except (ConnectionAbortedError,ConnectionResetError,ValueError) as err:
+    # TODO: Add back ValueError
+    except (ConnectionAbortedError,ConnectionResetError) as err:
 
         print(err)
 
@@ -225,6 +237,8 @@ def main():
 
     except BaseException as err:
         print('Unexpected Error! Shutting down...')
+        print(err)
+        tb.print_exc()
         for conn in connections.values():
             try:
                 send_message(conn,Packet(

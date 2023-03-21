@@ -1,0 +1,10 @@
+CONNECTSTOMORE = 1 # Per Case
+CONNECTSTOCITY = 2 # Per Case
+ENEMYCAPITAL = 2
+ENEMYUNIT = 1.5
+ENEMYTOWER = 2
+HASTREE = 1
+REQUIREDOUBLE = -1
+WAGEOVERSHOOT = -0.2 #Per unit gold, in case of doubleup
+UNPROTECT = -0.25 # Per unit
+PROTECT = 0.5 # Per unit

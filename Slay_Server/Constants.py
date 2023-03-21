@@ -14,8 +14,9 @@ Port = 4444
 MapXSize = 15
 MapYSize = 15
 
-# Number of players needed for the game
+# Number of players needed for the game and the number of bots in the game (there must be atleast one human player)
 NumberOfPlayers = 2
+NumberofBots = 0
 
 # Automatically-Relaunch server every time game ends/crashes
 AutoReboot = False
@@ -48,6 +49,8 @@ try:
     XSIZE = int(config['BASIC']['MapXSize'])
     YSIZE = int(config['BASIC']['MapYSize'])
     MAX_COLOR = int(config['BASIC']['NumberOfPlayers'])
+    BOTS = int(config['BASIC']['NumberOfBots'])
+    if BOTS >= MAX_COLOR: raise Exception('Too many bots!')
     AUTOREBOOT = config['BASIC']['AutoReboot'] == 'True'
     IP = config['ADVANCED']['IP']
     DISCOVERABLE = config['DISCOVERY']['EnableDiscovery'] == 'True'

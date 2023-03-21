@@ -1,7 +1,7 @@
 import pickle
 import socket
 import time
-from Constants import PORT, DISCOVERABLE, NAME, PUBLIC, MAX_COLOR
+from Constants import PORT, DISCOVERABLE, NAME, PUBLIC, MAX_COLOR,BOTS
 
 HEADERSIZE = 16
 
@@ -74,7 +74,7 @@ class ServerInfo:
     def __init__(self,players,state):
         self.Name = NAME
         self.Address = (socket.gethostbyname(socket.gethostname()),PORT)
-        self.Players = (players,MAX_COLOR)
+        self.Players = (players,MAX_COLOR-BOTS)
         self.Status = ServerInfo.WAITING
         self.Type = bool(PUBLIC)
 

@@ -37,7 +37,7 @@ def verify(array):
         verified.append(cell)
     return verified
 
-def color_aggregate(x,y,land,grid):
+'''def color_aggregate(x,y,land,grid):
     new = []
     for neighbour in verify(neighbours(x,y,1)):
         if grid[neighbour[0]][neighbour[1]].color == grid[x][y].color and neighbour not in land:
@@ -46,6 +46,18 @@ def color_aggregate(x,y,land,grid):
 
     for neighbour in new:
         color_aggregate(neighbour[0],neighbour[1],land,grid)
+
+    return'''
+
+def color_aggregate(x,y,land,new,grid):
+    new_this_call = []
+    for neighbour in verify(neighbours(x,y,1)):
+        if grid[neighbour[0]][neighbour[1]].color == grid[x][y].color and neighbour not in land and neighbour not in new:
+            new.append(neighbour)
+            new_this_call.append(neighbour)
+
+    for neighbour in new_this_call:
+        color_aggregate(neighbour[0],neighbour[1],land,new,grid)
 
     return
 
@@ -149,6 +161,7 @@ def roundupdate(grid):
 
             else: #Its a unit
                 grid[x][y].playable = True
+                print(f'set {(x,y)} to playable')
                 affected_cells.append((x,y))
     
     for cell in trees_to_add: grid[cell[0]][cell[1]].entity = TREE
@@ -290,7 +303,7 @@ def createGrid():
                     land = ally_neighbours
                     land.append((x,y))
                     for cell in ally_neighbours:
-                        color_aggregate(cell[0],cell[1],land,grid)
+                        color_aggregate(cell[0],cell[1],land,land,grid)
 
                     # configure said cells
                     grid[x][y].land = land
@@ -311,3 +324,238 @@ def createGrid():
     addTrees(grid)
     print(f'Successfully made grid in {iteration} iterations')
     return grid
+
+# Code below if for AI Player Use
+def getValidPlacementSpots(hall_pos,grid,entity):
+
+    valid = []
+
+    if entity != TOWER:
+        land = getBorderingLand(hall_pos,grid)
+        for loc in land:
+            if grid[loc[0]][loc[1]].color == grid[hall_pos[0]][hall_pos[1]].color:
+                if grid[loc[0]][loc[1]].entity <= GRAVE or (entity < KNIGHT and entity > CITY and grid[loc[0]][loc[1]].entity == entity): 
+                    valid.append(loc)
+            elif grid[loc[0]][loc[1]].security < entity-CITY: 
+                valid.append(loc)
+    else:
+        land = grid[hall_pos[0]][hall_pos[1]].land.copy()
+        for loc in land:
+            if grid[loc[0]][loc[1]].entity <= GRAVE: valid.append(loc)
+
+    return valid
+
+def getBorderingLand(hall_pos,grid):
+    land = grid[hall_pos[0]][hall_pos[1]].land.copy()
+
+    for x,y in grid[hall_pos[0]][hall_pos[1]].land:
+        tmp = verify(neighbours(x,y,1))
+        for cell in verify(neighbours(x,y,1)): 
+            if not grid[cell[0]][cell[1]].terrain: tmp.remove(cell)
+        appendifnotAppended(land,tmp)
+
+    return land
+
+def getValidMoves(pos,grid,color,entity):
+    valid = []
+    capital = grid[pos[0]][pos[1]].hall_loc
+    city_land = grid[capital[0]][capital[1]].land
+
+    for location in verify(neighbours(pos[0],pos[1],2)):
+
+        if not grid[location[0]][location[1]].terrain: continue
+
+        if grid[location[0]][location[1]].color == color: 
+            if location in city_land and grid[location[0]][location[1]].entity < TOWER or (grid[location[0]][location[1]].entity == entity and entity<KNIGHT):
+                valid.append(location)
+
+        else:
+            
+            if grid[location[0]][location[1]].security >= entity-CITY: continue
+            for neighbour in neighbours(location[0],location[1],1):
+
+                if neighbour in city_land:
+                    valid.append(location)
+                    break
+
+    valid.append(pos)
+    return set(valid)
+
+# Returns list of adjacent cells to captured cell, that are allied and captured under a different city
+def GetConnectingTerritories(grid,color,pos,selected_city):
+    connecting = []
+    for cell in verify(neighbours(pos[0],pos[1],1)):
+        if (grid[cell[0]][cell[1]].color != color): continue
+        if (cell in grid[selected_city[0]][selected_city[1]].land): continue
+        if (grid[cell[0]][cell[1]].hall_loc is not None): connecting.append(cell)
+    return connecting
+
+def GetConnectingUnclaimed(grid,color,pos):
+    connecting = []
+    for cell in verify(neighbours(pos[0],pos[1],1)):
+        if (grid[cell[0]][cell[1]].color != color): continue
+        if (grid[cell[0]][cell[1]].hall_loc is None): connecting.append(cell)
+    return connecting
+
+def convertCity(grid,joining_city,selected_city):
+    for cell in grid[joining_city[0]][joining_city[1]].land:
+        grid[cell[0]][cell[1]].hall_loc = selected_city
+
+    print(selected_city,'is joined by',joining_city)
+    grid[selected_city[0]][selected_city[1]].wages += grid[joining_city[0]][joining_city[1]].wages
+    grid[selected_city[0]][selected_city[1]].income += grid[joining_city[0]][joining_city[1]].income
+    grid[selected_city[0]][selected_city[1]].net += grid[joining_city[0]][joining_city[1]].net
+    grid[selected_city[0]][selected_city[1]].gold += grid[joining_city[0]][joining_city[1]].gold
+    grid[selected_city[0]][selected_city[1]].land += grid[joining_city[0]][joining_city[1]].land
+
+    grid[joining_city[0]][joining_city[1]].wages = None
+    grid[joining_city[0]][joining_city[1]].income = None
+    grid[joining_city[0]][joining_city[1]].net = None
+    grid[joining_city[0]][joining_city[1]].gold = None
+    grid[joining_city[0]][joining_city[1]].land = []
+    grid[joining_city[0]][joining_city[1]].entity = 0
+
+def moveHall(grid,old_pos):
+    land = grid[old_pos[0]][old_pos[1]].land.copy()
+    land.remove(old_pos)
+
+    if len(land) < 3: 
+        for cell in land:
+            grid[cell[0]][cell[1]].hall_loc = None
+            if grid[cell[0]][cell[1]].entity > CITY: 
+                grid[cell[0]][cell[1]].entity = GRAVE
+                grid[cell[0]][cell[1]].gravetime = 2
+                SecurityUpdate(grid,cell)
+        return land, None
+
+    tmp = land.copy()
+    rng = None
+
+    while True:
+        rng = tmp[random.randint(0,len(tmp)-1)]
+        if grid[rng[0]][rng[1]].entity < TOWER:
+            grid[rng[0]][rng[1]].entity = CITY
+            grid[rng[0]][rng[1]].land = land
+            grid[rng[0]][rng[1]].wages = grid[old_pos[0]][old_pos[1]].wages
+            grid[rng[0]][rng[1]].income = grid[old_pos[0]][old_pos[1]].income - 1
+            grid[rng[0]][rng[1]].net = grid[old_pos[0]][old_pos[1]].net - 1 - grid[old_pos[0]][old_pos[1]].gold
+            grid[rng[0]][rng[1]].gold = 0
+            
+            for cell in land:
+                grid[cell[0]][cell[1]].hall_loc = rng
+            break
+        else: tmp.remove(rng)
+
+        if len(tmp) < 3: 
+            for cell in land:
+                grid[cell[0]][cell[1]].hall_loc = None
+                if grid[cell[0]][cell[1]].entity > CITY: 
+                    grid[cell[0]][cell[1]].entity = GRAVE
+                    grid[cell[0]][cell[1]].gravetime = 2
+                    SecurityUpdate(grid,cell)
+            break
+
+    return land, rng # rng is the new position of the enemy city
+
+def checkForDivide(hall_pos,grid):
+    actual_land = [hall_pos]
+    color_aggregate(hall_pos[0],hall_pos[1],actual_land,actual_land,grid)
+    if len(actual_land) != len(grid[hall_pos[0]][hall_pos[1]].land): 
+        print('divide caught!')
+        return True, actual_land
+    print('no divide')
+    return False, actual_land
+
+def createCity(land,grid,affected_cells,queued_security_updates):
+
+    print(f'createCity logs: \n Called with arguments: {land}')
+
+    if len(land)==1: 
+        grid[land[0][0]][land[0][1]].hall_loc = None
+        if grid[land[0][0]][land[0][1]].entity > CITY: 
+            grid[land[0][0]][land[0][1]].entity = GRAVE
+            grid[land[0][0]][land[0][1]].gravetime = 2
+            SecurityUpdate(grid,land[0])
+        return
+
+    tmp = land.copy()
+    rng = None
+
+    while True:
+        rng = tmp[random.randint(0,len(tmp)-1)]
+        if grid[rng[0]][rng[1]].entity < TOWER:
+            grid[rng[0]][rng[1]].entity = CITY
+            grid[rng[0]][rng[1]].land = land
+            grid[rng[0]][rng[1]].wages = 0
+            grid[rng[0]][rng[1]].income = 0
+            grid[rng[0]][rng[1]].gold = 0
+            
+            for cell in land:
+                grid[cell[0]][cell[1]].hall_loc = rng
+                if grid[cell[0]][cell[1]].entity not in (2,3):
+                    grid[rng[0]][rng[1]].income += 1
+                    if grid[cell[0]][cell[1]].entity > CITY: grid[rng[0]][rng[1]].wages += math.floor(2*(3**(grid[cell[0]][cell[1]].entity- MAN)))
+
+            grid[rng[0]][rng[1]].net = grid[rng[0]][rng[1]].income - grid[rng[0]][rng[1]].wages
+            break
+
+        else: tmp.remove(rng)
+
+        if len(tmp) < 2: 
+            for cell in land:
+                grid[cell[0]][cell[1]].hall_loc = None
+                if grid[cell[0]][cell[1]].entity > CITY: 
+                    grid[cell[0]][cell[1]].entity = GRAVE
+                    grid[cell[0]][cell[1]].gravetime = 2
+                    SecurityUpdate(grid,cell)
+            rng = None
+            break
+
+    if rng is not None: 
+        print(f' Calling HandleSplits with: rng = {rng}\n its land is {grid[rng[0]][rng[1]].land}')
+        HandleSplits(grid,rng,affected_cells,queued_security_updates)
+    return rng
+
+def appendifnotAppended(array,items):
+    for item in items:
+        if item not in array: array.append(item)
+    return
+
+def HandleSplits(grid,original_hall,affected_cells,queued_security_updates):
+    isDivide, actual_land = checkForDivide(original_hall,grid)
+    if isDivide:
+        
+        print(f'Handlesplit logs:\n Called with Arguments {original_hall},{len(affected_cells)},{len(queued_security_updates)}\n This hall has land: {grid[original_hall[0]][original_hall[1]].land}\n Actual land eval to: {actual_land}')
+
+        if affected_cells is not None:
+            appendifnotAppended(affected_cells,grid[original_hall[0]][original_hall[1]].land)
+
+        if len(actual_land)>1:
+            print(original_hall,'had more than 1, ',len(actual_land))
+            split_land = grid[original_hall[0]][original_hall[1]].land.copy()
+            grid[original_hall[0]][original_hall[1]].land = actual_land
+            grid[original_hall[0]][original_hall[1]].income = 0
+            grid[original_hall[0]][original_hall[1]].wages = 0
+
+            for land in actual_land:
+                split_land.remove(land)
+                if grid[land[0]][land[1]].entity not in (2,3):
+                    grid[original_hall[0]][original_hall[1]].income += 1
+                    if grid[land[0]][land[1]].entity > CITY: grid[original_hall[0]][original_hall[1]].wages += math.floor(2*(3**(grid[land[0]][land[1]].entity- MAN)))
+
+            grid[original_hall[0]][original_hall[1]].net = grid[original_hall[0]][original_hall[1]].gold + grid[original_hall[0]][original_hall[1]].income - grid[original_hall[0]][original_hall[1]].wages
+        else:
+            print(original_hall,'had 1, ',len(actual_land))
+            split_land = grid[original_hall[0]][original_hall[1]].land.copy()
+            split_land.remove(original_hall)
+            grid[original_hall[0]][original_hall[1]].land = []
+            grid[original_hall[0]][original_hall[1]].income = None
+            grid[original_hall[0]][original_hall[1]].wages = None
+            grid[original_hall[0]][original_hall[1]].net = None
+            grid[original_hall[0]][original_hall[1]].hall_loc = None
+            grid[original_hall[0]][original_hall[1]].entity = 0
+
+        new_hall_loc = createCity(split_land,grid,affected_cells,queued_security_updates)
+        if new_hall_loc is not None:
+            queued_security_updates.append(new_hall_loc)
+            appendifnotAppended(affected_cells,verify(neighbours(new_hall_loc[0],new_hall_loc[1],1)))
