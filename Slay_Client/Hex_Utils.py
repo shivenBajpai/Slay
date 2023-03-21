@@ -65,7 +65,7 @@ def getBorderingLand(hall_pos,grid):
 
     for x,y in grid[hall_pos[0]][hall_pos[1]].land:
         tmp = verify(neighbours(x,y,1))
-        for cell in cell in verify(neighbours(x,y,1)): 
+        for cell in verify(neighbours(x,y,1)): 
             if not grid[cell[0]][cell[1]].terrain: tmp.remove(cell)
         appendifnotAppended(land,tmp)
 
