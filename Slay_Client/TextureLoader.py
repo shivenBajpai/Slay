@@ -25,6 +25,18 @@ cells.append([
     pygame.image.load('./Slay_Assets/green.png').convert_alpha(),
     pygame.image.load('./Slay_Assets/green_selected.png').convert_alpha()
 ])
+cells.append([
+    pygame.image.load('./Slay_Assets/cyan.png').convert_alpha(),
+    pygame.image.load('./Slay_Assets/cyan_selected.png').convert_alpha()
+])
+cells.append([
+    pygame.image.load('./Slay_Assets/lime.png').convert_alpha(),
+    pygame.image.load('./Slay_Assets/lime_selected.png').convert_alpha()
+])
+cells.append([
+    pygame.image.load('./Slay_Assets/violet.png').convert_alpha(),
+    pygame.image.load('./Slay_Assets/violet_selected.png').convert_alpha()
+])
 
 #load entites
 entities.append(0) #Placeholder
