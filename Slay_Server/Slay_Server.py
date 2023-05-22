@@ -176,7 +176,7 @@ def main():
                                         broadcast(connections,Packet(Packet.END,{'winner':activePlayers[0]-1}))
                                         raise GameOver(activePlayers[0])
                                     elif activePlayers[0]>MAX_CLIENTS:
-                                        winner = PercentageCalculate(serverside_grid)[0][0]
+                                        winner = CountCellsofColor(serverside_grid)[0][0]
                                         broadcast(connections,Packet(Packet.END,{'winner':winner}))
                                         raise GameOver(winner+1)
                                     else:

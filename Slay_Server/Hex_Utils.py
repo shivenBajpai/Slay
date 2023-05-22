@@ -172,7 +172,7 @@ def roundupdate(grid):
 
     return affected_cells
 
-def PercentageCalculate(grid,claimed=True):
+def CountCellsofColor(grid,claimed=True):
     
     count = [0]*MAX_COLOR
     for y in range (0,YSIZE):
@@ -287,11 +287,14 @@ def createGrid():
 
         #validity checks & create halls
         hall_count = [0]*(MAX_COLOR)
+        deduction = 0
         for y in range (0,YSIZE):
             for x in range(0,XSIZE):
 
                 # this is not a part of terrain
-                if not grid[x][y].color: continue
+                if not grid[x][y].terrain: 
+                    deduction += 1
+                    continue
 
                 # already handled, move on
                 if grid[x][y].hall_flag: continue
@@ -331,9 +334,14 @@ def createGrid():
 
         if max(hall_count) - min(hall_count) > 1: continue
         if min(hall_count) == 0: continue
+        idealColorCount = (XSIZE*YSIZE-deduction)/MAX_COLOR
+        colorCounts = CountCellsofColor(grid,claimed=False)
+        if colorCounts[0][1]/idealColorCount > 1.2: continue
+        if colorCounts[-1][1]/idealColorCount < 0.8: continue
         break
     
     #MARKER
+    print(f'{CountCellsofColor(grid,claimed=False)}, in a grid where average should be {(XSIZE*YSIZE-deduction)/MAX_COLOR}')
     addTrees(grid)
     print(f'Successfully made grid in {iteration} iterations')
     return grid
