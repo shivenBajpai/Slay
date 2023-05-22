@@ -140,7 +140,6 @@ def network(moves,grid,animations,color,selected_city,set_selected_city,replayFi
                     animations.append(move)
 
         elif pack.code == Packet.PLAY:
-            print('DEBUG: PLAY packet')
             turn = pack.data['turn']
 
         elif pack.code == Packet.END:

@@ -9,42 +9,10 @@ import AI_Constants.RelocateModifiers as RelModifiers
 import Hex_Utils
 import Constants
 import math
-from Move_Utils import Move
 
 # Move would be a better name but would be confused with Move_Utils.Move
 class AIMove:
-    def __init__(self,actor,target,required,cost,priority,grid,type) -> None:
-        '''
-        self.actor => unit/city making the play, if unit, unit will be moved if move is played
-        required => other units required to make the play
-        target => target location
-        priority => calculated priority value
-        requireSpending flag => marks if task spends gold
-
-        if actor can no longer afford, or be played, move is discarded
-        if required are no longer playable, move is discarded
-        if target has changed state, move is discarded, checked using expected state which gives color+entity on target
-        If priority goes negative, move is discarded (likely in case of Relocate)
-
-        if wage increases and is overshot over income, add modifier for the same
-
-        if task is limited by affordability reasons, we need to increase savemoney prio
-
-        priority is to be calculated on the basis of initial state only and before any moves are made only
-
-        requireSpending will be used to discard tasks with a lower priority than SaveMoney
-
-        class functions =>
-        Hex_Utils.verify (Hex_Utils.verify move is still valid)
-        execute (carry out the represented move on grid)
-
-        required =>
-        array of tuples of (type,data)
-        types => 
-        new unit - create new unit at spot - data: Entity ID - no checking
-        use unit - requires unit to be playable, removes unit if move is played - data: position of this unit - checking
-        buy worth - requires specified amount to be in bank, indicates that said money is needed to make play. To be used if city cannot be designated as the actor - data: cost of this play - checking
-        '''
+    def __init__(self,actor,target,required,cost,priority,grid,description) -> None:
         self.actor = actor
         self.target = target
         self.required = required
@@ -54,42 +22,37 @@ class AIMove:
         self.expected__target_state = (grid[self.target[0]][self.target[1]].color,grid[self.target[0]][self.target[1]].entity)
         self.expected_actor_state = (grid[self.actor[0]][self.actor[1]].color,grid[self.actor[0]][self.actor[1]].entity)
         self.affected_cells = []
-        self.type = type
+        self.description = description
 
     def verify(self,grid,cities) -> tuple[bool,bool]: # returns verification, whether failure to Hex_Utils.verify was due to insufficient funds
-        print(f'------verifying type: {self.type} by {self.actor} on {self.target} \t\t prio {self.priority}')
-        #TODO: switch these ifs for perf
-        if (grid[self.actor[0]][self.actor[1]].color,grid[self.actor[0]][self.actor[1]].entity) != self.expected_actor_state: 
-            print(f'------Changed actor state catch')
-            return False,False
+        #print(f'------verifying type: {self.type} by {self.actor} on {self.target} \t\t prio {self.priority}')
         if (self.actor not in cities) and (not grid[self.actor[0]][self.actor[1]].playable): 
-            print(f'------Unplayable catch')
+            #print(f'------Unplayable catch')
+            return False,False
+        if (grid[self.actor[0]][self.actor[1]].color,grid[self.actor[0]][self.actor[1]].entity) != self.expected_actor_state: 
+            #print(f'------Changed actor state catch')
             return False,False
         if self.requireSpending and grid[grid[self.actor[0]][self.actor[1]].hall_loc[0]][grid[self.actor[0]][self.actor[1]].hall_loc[1]].gold < self.cost: 
-            print(f'------Cant afford catch')
+            #print(f'------Cant afford catch')
             return False,True
         
         for type,data in self.required:
             if type == 'use unit':
                 if not grid[data[0]][data[1]].playable: 
-                    print(f'------Unplayable (use unit) catch')
+                    #print(f'------Unplayable (use unit) catch')
                     return False,False
             elif type == 'buy worth':
                 if grid[self.actor[0]][self.actor[1]].gold < data: 
-                    print(f'------Cant afford (buy worth) catch')
+                    #print(f'------Cant afford (buy worth) catch')
                     return False,True
 
         if (grid[self.target[0]][self.target[1]].color,grid[self.target[0]][self.target[1]].entity) != self.expected__target_state: 
-            print(f'------Changed target state catch')
+            #print(f'------Changed target state catch')
             return False,False
 
         return True,False
     
     def execute(self,grid,color) -> None:
-        
-        '''if grid[self.actor[0]][self.actor[1]].entity == Constants.CITY:
-            if grid[self.target[0]][self.target[1]].color != color:
-                #New unit capture enemy'''
         
         self.affected_cells = [] #List of all cells with changes, need not contain the cell unit was picked from and moved onto
         queued_security_updates = []
@@ -99,17 +62,22 @@ class AIMove:
         selected_city = grid[self.actor[0]][self.actor[1]].hall_loc
         mouse_pos = self.target
 
+        self.affected_cells.append(mouse_pos)
+        self.affected_cells.extend(Hex_Utils.verify(Hex_Utils.neighbours(mouse_pos[0],mouse_pos[1],1)))
+
         if len(self.required) > 0 and self.required[0][0] == 'use unit':
             consumed = self.required[0][1]
             consumed_entity = grid[consumed[0]][consumed[1]].entity
             self.affected_cells.append(selected_city)
             self.affected_cells.extend(Hex_Utils.verify(Hex_Utils.neighbours(consumed[0],consumed[1],1)))
+            self.affected_cells.append(consumed)
             queued_security_updates.append(consumed)
-            wage_change = math.floor(2*(3**(consumed_entity-Constants.MAN+1))-2*(3**(consumed_entity-Constants.MAN)))*2
+            wage_change = math.floor(2*(3**(consumed_entity-Constants.MAN+1))-2*2*(3**(consumed_entity-Constants.MAN)))
             grid[selected_city[0]][selected_city[1]].wages += wage_change
             grid[selected_city[0]][selected_city[1]].net -= wage_change
             grid[self.actor[0]][self.actor[1]].entity = grid[self.actor[0]][self.actor[1]].entity + 1
             grid[consumed[0]][consumed[1]].playable = False
+            grid[consumed[0]][consumed[1]].entity = Constants.NONE
 
         if len(self.required) > 0 and self.required[0][0] == 'buy worth':
             self.affected_cells.append(selected_city)
@@ -125,19 +93,30 @@ class AIMove:
         else:
             mouse_entity = grid[self.actor[0]][self.actor[1]].entity
             grid[self.actor[0]][self.actor[1]].entity = Constants.NONE
-            print(f'>> set {self.actor} to entity {grid[self.actor[0]][self.actor[1]].entity}')
             pick_up_pos = self.actor
             self.affected_cells.extend(Hex_Utils.verify(Hex_Utils.neighbours(self.actor[0],self.actor[1],1)))
+            self.affected_cells.append(self.actor)
             queued_security_updates.append(self.actor)
+
+        # Reclaimed forest land, refund income loss
+        if grid[mouse_pos[0]][mouse_pos[1]].hall_loc is not None and (grid[mouse_pos[0]][mouse_pos[1]].entity == Constants.TREE or grid[mouse_pos[0]][mouse_pos[1]].entity == Constants.PALM):
+            refunded_city = grid[mouse_pos[0]][mouse_pos[1]].hall_loc
+            if refunded_city not in self.affected_cells: self.affected_cells.append(refunded_city)
+            Hex_Utils.appendifnotAppended(self.affected_cells,Hex_Utils.verify(Hex_Utils.neighbours(mouse_pos[0],mouse_pos[1],1)))
+            Hex_Utils.appendifnotAppended(self.affected_cells,[mouse_pos])
+            queued_security_updates.append(mouse_pos)
+            grid[refunded_city[0]][refunded_city[1]].income += 1
+            grid[refunded_city[0]][refunded_city[1]].net += 1
 
         # doubling up
         if grid[mouse_pos[0]][mouse_pos[1]].entity == mouse_entity and grid[mouse_pos[0]][mouse_pos[1]].color == color: 
             self.affected_cells.append(selected_city)
             self.affected_cells.extend(Hex_Utils.verify(Hex_Utils.neighbours(mouse_pos[0],mouse_pos[1],1)))
             queued_security_updates.append(mouse_pos)
-            wage_change = math.floor(2*(3**(mouse_entity-Constants.MAN+1))-2*(3**(mouse_entity-Constants.MAN)))*(1 if pick_up_pos is None else 2)
+            wage_change = math.floor(2*(3**(mouse_entity-Constants.MAN+1))-2*(3**(mouse_entity-Constants.MAN))*(1 if pick_up_pos is None else 2))
             grid[selected_city[0]][selected_city[1]].wages += wage_change
-            grid[selected_city[0]][selected_city[1]].net -= wage_change
+            grid[selected_city[0]][selected_city[1]].gold -= self.cost # This property was set during object creation
+            grid[selected_city[0]][selected_city[1]].net -= wage_change + self.cost
             grid[mouse_pos[0]][mouse_pos[1]].entity = mouse_entity + 1
             doubleup_flag = True
         else: 
@@ -149,7 +128,6 @@ class AIMove:
                 self.affected_cells.append(selected_city)
                 self.affected_cells.extend(Hex_Utils.verify(Hex_Utils.neighbours(mouse_pos[0],mouse_pos[1],1)))
                 queued_security_updates.append(mouse_pos)
-                print(selected_city)
                 grid[selected_city[0]][selected_city[1]].income += 1
                 grid[selected_city[0]][selected_city[1]].net += 1
                 grid[selected_city[0]][selected_city[1]].land.append(mouse_pos)
@@ -159,20 +137,16 @@ class AIMove:
 
                     if grid[mouse_pos[0]][mouse_pos[1]].entity == Constants.CITY:
                         # Captured enemy centre, move it
-                        enemy_land, affected_enemy_hall = Hex_Utils.moveHall(grid,mouse_pos)
-                        if affected_enemy_hall is not None: 
-                            queued_security_updates.append(affected_enemy_hall)
-                            Hex_Utils.appendifnotAppended(self.affected_cells,Hex_Utils.verify(Hex_Utils.neighbours(affected_enemy_hall[0],affected_enemy_hall[1],1)))
-                        self.affected_cells.extend(enemy_land)
+                        affected_enemy_hall = Hex_Utils.moveHall(grid,mouse_pos,self.affected_cells,queued_security_updates)
                     else:
                         # captured random enemy land
-                        self.affected_cells.append(grid[mouse_pos[0]][mouse_pos[1]].hall_loc)
-                        affected_enemy_hall = self.affected_cells[-1]
-                        grid[self.affected_cells[-1][0]][self.affected_cells[-1][1]].income -= 1
-                        wage_change = math.floor(2*3**(grid[mouse_pos[0]][mouse_pos[1]].entity-Constants.MAN))
-                        grid[self.affected_cells[-1][0]][self.affected_cells[-1][1]].wages -= wage_change
-                        grid[self.affected_cells[-1][0]][self.affected_cells[-1][1]].net += wage_change - 1
-                        grid[self.affected_cells[-1][0]][self.affected_cells[-1][1]].land.remove(mouse_pos)
+                        affected_enemy_hall = grid[mouse_pos[0]][mouse_pos[1]].hall_loc
+                        self.affected_cells.append(affected_enemy_hall)
+                        wage_change = math.floor(2*3**(grid[mouse_pos[0]][mouse_pos[1]].entity-Constants.MAN)) if grid[mouse_pos[0]][mouse_pos[1]].entity >= Constants.MAN else 0
+                        grid[affected_enemy_hall[0]][affected_enemy_hall[1]].income -= 1
+                        grid[affected_enemy_hall[0]][affected_enemy_hall[1]].wages -= wage_change
+                        grid[affected_enemy_hall[0]][affected_enemy_hall[1]].net += wage_change - 1
+                        grid[affected_enemy_hall[0]][affected_enemy_hall[1]].land.remove(mouse_pos)
 
                 # check if this connects to even more land
                 connections = Hex_Utils.GetConnectingTerritories(grid,color,mouse_pos,selected_city)
@@ -193,7 +167,7 @@ class AIMove:
                     self.affected_cells.append(cell)
                     grid[cell[0]][cell[1]].hall_loc = selected_city
                     grid[selected_city[0]][selected_city[1]].land.append(cell)
-                    if grid[cell[0]][cell[1]] != Constants.TREE and grid[cell[0]][cell[1]] != Constants.PALM:
+                    if grid[cell[0]][cell[1]].entity != Constants.TREE and grid[cell[0]][cell[1]].entity != Constants.PALM:
                         grid[selected_city[0]][selected_city[1]].income += 1
                         grid[selected_city[0]][selected_city[1]].net += 1
 
@@ -202,6 +176,7 @@ class AIMove:
                 if selected_city not in self.affected_cells: self.affected_cells.append(selected_city)
                 queued_security_updates.append(mouse_pos)
                 Hex_Utils.appendifnotAppended(self.affected_cells,Hex_Utils.verify(Hex_Utils.neighbours(mouse_pos[0],mouse_pos[1],1)))
+                Hex_Utils.appendifnotAppended(self.affected_cells,[mouse_pos])
                 wage_change = math.floor(2*(3**(mouse_entity-Constants.MAN))) if mouse_entity != Constants.TOWER else 0
                 cost = (mouse_entity-Constants.CITY)*10 if mouse_entity != Constants.TOWER else 15
                 grid[selected_city[0]][selected_city[1]].wages += wage_change
@@ -222,8 +197,7 @@ class AIMove:
 
         for update in queued_security_updates: Hex_Utils.SecurityUpdate(grid,update)
 
-        if not doubleup_flag: grid[self.target[0]][self.target[1]].playable = False
-
+        if not doubleup_flag: grid[mouse_pos[0]][mouse_pos[1]].playable = False
         return
         
 def Overshoot(grid,city_loc,new_unit,doubleup_contributors=0):
@@ -269,40 +243,43 @@ def DoubleupPartners(grid,color,pos):
         partners.append(cell)
     return partners
 
-def CityPlacementMoves(grid,color,city_loc):
+def CityPlacementMoves(grid,color,city_loc,turn):
     moves = []
     maxunit = math.floor(grid[city_loc[0]][city_loc[1]].gold/10) # Max unit affordable to buy
     if maxunit>4: maxunit = 4
+
+    unit_bonus = BaseConstants.NO_UNITS_ON_GROUND_BONUS*(1 if grid[city_loc[0]][city_loc[1]].wages == 0 and len(grid[city_loc[0]][city_loc[1]].land)>3 else (0.5 if grid[city_loc[0]][city_loc[1]].wages < 8 and len(grid[city_loc[0]][city_loc[1]].land)>3 else 0))
+    tower_bonus = BaseConstants.BOX_IN_STRATEGY_BONUS*(1 if len(grid[city_loc[0]][city_loc[1]].land)<=3 and len(Hex_Utils.getValidMoves(city_loc,grid,color,Constants.MAN)) == 0 else 0)
 
     for i in range(1,maxunit+1):
         for pos in Hex_Utils.getValidPlacementSpots(city_loc,grid,Constants.CITY+i):
 
             if grid[pos[0]][pos[1]].color != color:
-                prio = BaseConstants.CAPTURE_ENEMY + len(Hex_Utils.GetConnectingTerritories(grid,color,pos,city_loc))*EnemyCapMods.CONNECTSTOCITY + len(Hex_Utils.GetConnectingUnclaimed(grid,color,pos))*EnemyCapMods.CONNECTSTOMORE + unProtected(grid,color,pos)*EnemyCapMods.UNPROTECT + Protected(grid,color,pos,Constants.CITY+i)*UnclaimedCapMods.PROTECT + EnemyCapMods.HASTREE*(1 if grid[pos[0]][pos[1]].entity > Constants.NONE and grid[pos[0]][pos[1]].entity <= Constants.GRAVE else 0) + EnemyCapMods.ENEMYCAPITAL*(1 if grid[pos[0]][pos[1]].entity == Constants.CITY else 0) + EnemyCapMods.ENEMYTOWER*(1 if grid[pos[0]][pos[1]].entity == Constants.TOWER else 0) + EnemyCapMods.ENEMYUNIT*(1 if grid[pos[0]][pos[1]].entity > Constants.CITY else 0) + EnemyCapMods.WAGEOVERSHOOT*Overshoot(grid,city_loc,i)
+                prio = BaseConstants.CAPTURE_ENEMY + len(Hex_Utils.GetConnectingTerritories(grid,color,pos,city_loc))*EnemyCapMods.CONNECTSTOCITY + len(Hex_Utils.GetConnectingUnclaimed(grid,color,pos))*EnemyCapMods.CONNECTSTOMORE + unProtected(grid,color,pos)*EnemyCapMods.UNPROTECT + Protected(grid,color,pos,Constants.CITY+i)*UnclaimedCapMods.PROTECT + EnemyCapMods.HASTREE*(1 if grid[pos[0]][pos[1]].entity > Constants.NONE and grid[pos[0]][pos[1]].entity <= Constants.GRAVE else 0) + EnemyCapMods.ENEMYCAPITAL*(1 if grid[pos[0]][pos[1]].entity == Constants.CITY else 0) + EnemyCapMods.ENEMYTOWER*(1 if grid[pos[0]][pos[1]].entity == Constants.TOWER else 0) + EnemyCapMods.ENEMYUNIT*(1 if grid[pos[0]][pos[1]].entity > Constants.CITY else 0) + EnemyCapMods.WAGEOVERSHOOT*Overshoot(grid,city_loc,i)+unit_bonus
                 moves.append(AIMove(city_loc,pos,[('new unit',Constants.CITY+i)],10*(i),prio,grid,'new unit capture'))
 
             elif grid[pos[0]][pos[1]].entity == Constants.NONE:
-                prio = BaseConstants.BUY_UNIT + Influence(grid,color,pos)*UnitMods.INFLUENCE + unProtected(grid,color,pos)*UnitMods.UNPROTECTS + Protected(grid,color,pos,i)*UnitMods.PROTECTS + UnitMods.WAGEOVERSHOOT*Overshoot(grid,city_loc,i)
+                prio = BaseConstants.BUY_UNIT + Influence(grid,color,pos)*UnitMods.INFLUENCE + unProtected(grid,color,pos)*UnitMods.UNPROTECTS + Protected(grid,color,pos,i)*UnitMods.PROTECTS + UnitMods.WAGEOVERSHOOT*Overshoot(grid,city_loc,i)+unit_bonus
                 moves.append(AIMove(city_loc,pos,[('new unit',Constants.CITY+i)],10*(i),prio,grid,'new unit empty'))
 
             elif grid[pos[0]][pos[1]].entity <= Constants.GRAVE:
                 for i in range(1,maxunit+1):
-                    prio = BaseConstants.BUY_UNIT + Influence(grid,color,pos)*UnitMods.INFLUENCE + unProtected(grid,color,pos)*UnitMods.UNPROTECTS + Protected(grid,color,pos,i)*UnitMods.PROTECTS + UnitMods.WAGEOVERSHOOT*Overshoot(grid,city_loc,i) + TreeMods.CANSPREAD*CanTreeSpread(grid,pos) + (1 if grid[pos[0]][pos[1]].entity == Constants.PALM else 0)
+                    prio = BaseConstants.BUY_UNIT + Influence(grid,color,pos)*UnitMods.INFLUENCE + unProtected(grid,color,pos)*UnitMods.UNPROTECTS + Protected(grid,color,pos,i)*UnitMods.PROTECTS + UnitMods.WAGEOVERSHOOT*Overshoot(grid,city_loc,i) + TreeMods.CANSPREAD*CanTreeSpread(grid,pos) + (1 if grid[pos[0]][pos[1]].entity == Constants.PALM else 0)+unit_bonus
                     moves.append(AIMove(city_loc,pos,[('new unit',Constants.CITY+i)],10*(i),prio,grid,'new unit tree'))
 
             elif grid[pos[0]][pos[1]].entity > Constants.CITY:
                 if maxunit >= grid[pos[0]][pos[1]].entity-Constants.CITY:
                     newlevel = grid[pos[0]][pos[1]].entity-Constants.CITY
-                    prio = BaseConstants.DOUBLE_UP + Protected(grid,color,pos,newlevel)*DoubleupMods.PROTECT + UnitMods.WAGEOVERSHOOT*Overshoot(grid,city_loc,i,1)
+                    prio = BaseConstants.DOUBLE_UP + Protected(grid,color,pos,newlevel)*DoubleupMods.PROTECT + UnitMods.WAGEOVERSHOOT*Overshoot(grid,city_loc,i,1)+unit_bonus
                     moves.append(AIMove(city_loc,pos,[('new unit',newlevel)],10*newlevel,prio,grid,'new unit double'))
 
     if grid[city_loc[0]][city_loc[1]].gold > 14:
         for pos in grid[city_loc[0]][city_loc[1]].land:
             if grid[pos[0]][pos[1]].entity == Constants.NONE:
-                prio = BaseConstants.BUY_TOWER + Protected(grid,color,pos,Constants.TOWER_SECURITY)*TowerMods.PROTECT + TowerProtectsHall(grid,pos)*TowerMods.PROTECTHALL
+                prio = BaseConstants.BUY_TOWER + Protected(grid,color,pos,Constants.TOWER_SECURITY)*TowerMods.PROTECT + TowerProtectsHall(grid,pos)*TowerMods.PROTECTHALL + tower_bonus
                 moves.append(AIMove(city_loc,pos,[('new unit',Constants.TOWER)],15,prio,grid,'new tower empty'))
             elif grid[pos[0]][pos[1]].entity <= Constants.GRAVE:
-                prio = BaseConstants.BUY_TOWER + Protected(grid,color,pos,Constants.TOWER_SECURITY)*TowerMods.PROTECT + TowerProtectsHall(grid,pos)*TowerMods.PROTECTHALL  + TreeMods.CANSPREAD*CanTreeSpread(grid,pos) + (1 if grid[pos[0]][pos[1]].entity == Constants.PALM else 0)
+                prio = BaseConstants.BUY_TOWER + Protected(grid,color,pos,Constants.TOWER_SECURITY)*TowerMods.PROTECT + TowerProtectsHall(grid,pos)*TowerMods.PROTECTHALL  + TreeMods.CANSPREAD*CanTreeSpread(grid,pos) + (1 if grid[pos[0]][pos[1]].entity == Constants.PALM else 0) + tower_bonus
                 moves.append(AIMove(city_loc,pos,[('new unit',Constants.TOWER)],15,prio,grid,'new tower tree'))
 
     return moves
@@ -311,6 +288,7 @@ def CityPlacementMoves(grid,color,city_loc):
 def UnitMoves(grid,color,unit_loc):
     moves = []
     targets = Hex_Utils.getValidMoves(unit_loc,grid,color,grid[unit_loc[0]][unit_loc[1]].entity)
+    targets.remove(unit_loc)
     partners = DoubleupPartners(grid,color,unit_loc)
     curr_influence = Influence(grid,color,unit_loc)
     city_loc = grid[unit_loc[0]][unit_loc[1]].hall_loc

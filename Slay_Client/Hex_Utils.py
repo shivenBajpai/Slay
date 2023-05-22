@@ -93,7 +93,7 @@ def getValidMoves(pos,grid,color,entity):
         if not grid[location[0]][location[1]].terrain: continue
 
         if grid[location[0]][location[1]].color == color: 
-            if location in city_land and grid[location[0]][location[1]].entity < TOWER or (grid[location[0]][location[1]].entity == entity and entity<KNIGHT):
+            if location in city_land and (grid[location[0]][location[1]].entity < TOWER or (grid[location[0]][location[1]].entity == entity and entity<KNIGHT)):
                 valid.append(location)
 
         else:
@@ -154,18 +154,22 @@ def convertCity(grid,joining_city,selected_city):
     grid[joining_city[0]][joining_city[1]].land = []
     grid[joining_city[0]][joining_city[1]].entity = 0
 
-def moveHall(grid,old_pos):
+def moveHall(grid,old_pos,affected_cells,queued_security_updates):
     land = grid[old_pos[0]][old_pos[1]].land.copy()
     land.remove(old_pos)
 
-    if len(land) < 3: 
+    queued_security_updates.append(old_pos)
+    appendifnotAppended(affected_cells,verify(neighbours(old_pos[0],old_pos[1],1)))
+    appendifnotAppended(affected_cells,land)
+
+    if len(land) < 2: 
         for cell in land:
             grid[cell[0]][cell[1]].hall_loc = None
             if grid[cell[0]][cell[1]].entity > CITY: 
                 grid[cell[0]][cell[1]].entity = GRAVE
-                grid[cell[0]][cell[1]].gravetime = 2
+                grid[cell[0]][cell[1]].gravetime = 1
                 SecurityUpdate(grid,cell)
-        return land, None
+        return None
 
     tmp = land.copy()
     rng = None
@@ -185,16 +189,17 @@ def moveHall(grid,old_pos):
             break
         else: tmp.remove(rng)
 
-        if len(tmp) < 3: 
+        if len(tmp) == 1: 
             for cell in land:
                 grid[cell[0]][cell[1]].hall_loc = None
                 if grid[cell[0]][cell[1]].entity > CITY: 
                     grid[cell[0]][cell[1]].entity = GRAVE
-                    grid[cell[0]][cell[1]].gravetime = 2
+                    grid[cell[0]][cell[1]].gravetime = 1
                     SecurityUpdate(grid,cell)
+            rng = None
             break
 
-    return land, rng # rng is the new position of the enemy city
+    return rng # rng is the new position of the enemy city
 
 def checkForDivide(hall_pos,grid):
     actual_land = [hall_pos]
@@ -214,6 +219,7 @@ def createCity(land,grid,affected_cells,queued_security_updates):
         if grid[land[0][0]][land[0][1]].entity > CITY: 
             grid[land[0][0]][land[0][1]].entity = GRAVE
             grid[land[0][0]][land[0][1]].gravetime = 2
+            grid[land[0][0]][land[0][1]].playable = False
             SecurityUpdate(grid,land[0])
         return
 
@@ -231,7 +237,7 @@ def createCity(land,grid,affected_cells,queued_security_updates):
             
             for cell in land:
                 grid[cell[0]][cell[1]].hall_loc = rng
-                if grid[cell[0]][cell[1]].entity not in (2,3):
+                if grid[cell[0]][cell[1]].entity not in (TREE,PALM):
                     grid[rng[0]][rng[1]].income += 1
                     if grid[cell[0]][cell[1]].entity > CITY: grid[rng[0]][rng[1]].wages += math.floor(2*(3**(grid[cell[0]][cell[1]].entity- MAN)))
 
@@ -245,7 +251,8 @@ def createCity(land,grid,affected_cells,queued_security_updates):
                 grid[cell[0]][cell[1]].hall_loc = None
                 if grid[cell[0]][cell[1]].entity > CITY: 
                     grid[cell[0]][cell[1]].entity = GRAVE
-                    grid[cell[0]][cell[1]].gravetime = 2
+                    grid[cell[0]][cell[1]].gravetime = 1
+                    grid[cell[0]][cell[1]].playable = False
                     SecurityUpdate(grid,cell)
             rng = None
             break

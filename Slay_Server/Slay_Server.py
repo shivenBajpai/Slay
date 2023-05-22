@@ -29,8 +29,8 @@ def main():
 
     # Prepare for game
     serverside_grid = createGrid()
-    turn = 0 # Corresponds to index in connections list of player whose turn it is. Does not match with client-side variable turn
-    activePlayers = [item for item in range(1, MAX_COLOR+1)]
+    turn = 0 # Corresponds to index in connections list of player whose turn it is. May or may not match with client-side variable turn, depending on how many players have lost
+    activePlayers = [item for item in range(1, MAX_COLOR+1)] # List with color no of every active player
 
     clients = []
     class GameOver(Exception): ...
@@ -138,7 +138,7 @@ def main():
                         pack = recieve_message(conn)
 
                         if pack.code == Packet.PING:
-                            send_message(conn,Packet(Packet.OK))
+                            send_message(conn,Packet(Packet.PING))
 
                         elif pack.code == Packet.LEAVE:
                             print(f'Leave request from {addr}',pack.code,pack.data)
@@ -165,7 +165,7 @@ def main():
                                 while turn < len(activePlayers) and activePlayers[turn]>MAX_CLIENTS:
                                     print('AI Called')
                                     broadcast(connections,Packet(Packet.PLAY,{'turn':activePlayers[turn]}))
-                                    movePacket = AI_Player.play(serverside_grid,activePlayers[turn])
+                                    movePacket = AI_Player.play(serverside_grid,activePlayers[turn],turn)
                                     broadcast(connections,movePacket)
                                     turn += 1
 
@@ -175,10 +175,14 @@ def main():
                                     if winCheck(serverside_grid,activePlayers):
                                         broadcast(connections,Packet(Packet.END,{'winner':activePlayers[0]-1}))
                                         raise GameOver(activePlayers[0])
+                                    elif activePlayers[0]>MAX_CLIENTS:
+                                        winner = PercentageCalculate(serverside_grid)[0][0]
+                                        broadcast(connections,Packet(Packet.END,{'winner':winner}))
+                                        raise GameOver(winner+1)
                                     else:
                                         for cell in roundupdate(serverside_grid): move.preanimation.gridChanges.append((cell,copy.deepcopy(serverside_grid[cell[0]][cell[1]])))
                                         broadcast(connections,Packet(Packet.UPDATE,move))
-
+                                
                                 broadcast(connections,Packet(Packet.PLAY,{'turn':activePlayers[turn]}))
 
                             else: 
@@ -193,8 +197,7 @@ def main():
                 time.sleep(0.1)
                 handleDiscoveryRequests(discovery_socket,MAX_CLIENTS,ServerInfo.IN_GAME)
 
-    # TODO: Add back ValueError
-    except (ConnectionAbortedError,ConnectionResetError) as err:
+    except (ConnectionAbortedError,ConnectionResetError,ValueError) as err:
 
         print(err)
 

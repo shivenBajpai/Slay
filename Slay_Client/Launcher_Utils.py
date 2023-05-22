@@ -471,8 +471,3 @@ class CreditsWindow:
     def windowClosed(self) -> None:
         self.mainWindow.event_generate('<<EnableUI>>')
         self.window.destroy()
-
-#TODO: Decide if this stays here or in the other file
-if __name__ == '__main__':
-    with ThreadPoolExecutor(max_workers=1,thread_name_prefix='SLAY') as exec:
-        MainWindow(exec)

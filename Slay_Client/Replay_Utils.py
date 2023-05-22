@@ -9,6 +9,7 @@ def getReplays():
     for file in list:
         if file[-4:] != '.bin': continue
         newlist.append(file[:-4].replace('_',':'))
+    newlist.reverse()
     return newlist
 
 def loadall(filename):

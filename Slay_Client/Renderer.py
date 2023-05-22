@@ -179,10 +179,12 @@ def drawDebugger(screen :pygame.Surface, grid, debug_pos, WINDOWY, WINDOWX):
     # Writing out the actual info
     screen.blit(roboto.render(f'Position: {debug_pos}',True,(255,255,255)),(50,WINDOWY+20))
     screen.blit(roboto.render(f'Entity: {grid[debug_pos[0]][debug_pos[1]].entity}',True,(255,255,255)),(50,WINDOWY+40))
-    screen.blit(roboto.render(f'Hall_loc: {grid[debug_pos[0]][debug_pos[1]].hall_loc}',True,(255,255,255)),(50,WINDOWY+60))
-    screen.blit(roboto.render(f'Land: ',True,(255,255,255)),(50,WINDOWY+80))
-    writeLandArray(grid[debug_pos[0]][debug_pos[1]].land,WINDOWX+100,90,WINDOWY+80,screen)
-    screen.blit(roboto.render(f'Playable: {grid[debug_pos[0]][debug_pos[1]].playable}',True,(255,255,255)),((WINDOWX+250)/2,WINDOWY+20))
+    screen.blit(roboto.render(f'Landlen: {len(grid[debug_pos[0]][debug_pos[1]].land)}',True,(255,255,255)),(50,WINDOWY+60))
+    screen.blit(roboto.render(f'Gold: {(grid[debug_pos[0]][debug_pos[1]].gold if hasattr(grid[debug_pos[0]][debug_pos[1]],"gold") else None)}',True,(255,255,255)),(50,WINDOWY+80))
+    screen.blit(roboto.render(f'Land: ',True,(255,255,255)),(50,WINDOWY+100))
+    writeLandArray(grid[debug_pos[0]][debug_pos[1]].land,WINDOWX+100,90,WINDOWY+100,screen)
+    screen.blit(roboto.render(f'Income: {(grid[debug_pos[0]][debug_pos[1]].income if hasattr(grid[debug_pos[0]][debug_pos[1]],"income") else None)}',True,(255,255,255)),((WINDOWX+250)/2,WINDOWY+20))
     screen.blit(roboto.render(f'Security Level: {grid[debug_pos[0]][debug_pos[1]].security}',True,(255,255,255)),((WINDOWX+250)/2,WINDOWY+40))
-    screen.blit(roboto.render(f'Security Providers: {grid[debug_pos[0]][debug_pos[1]].security_providers}',True,(255,255,255)),((WINDOWX+250)/2,WINDOWY+60))
+    screen.blit(roboto.render(f'Wage: {(grid[debug_pos[0]][debug_pos[1]].wages if hasattr(grid[debug_pos[0]][debug_pos[1]],"wages") else None)}',True,(255,255,255)),((WINDOWX+250)/2,WINDOWY+60))
+    screen.blit(roboto.render(f'Net: {(grid[debug_pos[0]][debug_pos[1]].net if hasattr(grid[debug_pos[0]][debug_pos[1]],"net") else None)}',True,(255,255,255)),((WINDOWX+250)/2,WINDOWY+80))
     

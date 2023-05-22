@@ -146,6 +146,19 @@ def handleEvent(event,grid,moves,color):
                 queued_security_updates = []
                 affected_enemy_hall = None
 
+                affected_cells.append(mouse_pos)
+                affected_cells.extend(verify(neighbours(mouse_pos[0],mouse_pos[1],1)))
+
+                # Reclaimed forest land, refund income loss
+                if grid[mouse_pos[0]][mouse_pos[1]].hall_loc is not None and (grid[mouse_pos[0]][mouse_pos[1]].entity == TREE or grid[mouse_pos[0]][mouse_pos[1]].entity == PALM):
+                    refunded_city = grid[mouse_pos[0]][mouse_pos[1]].hall_loc
+                    if refunded_city not in affected_cells: affected_cells.append(refunded_city)
+                    appendifnotAppended(affected_cells,verify(neighbours(mouse_pos[0],mouse_pos[1],1)))
+                    appendifnotAppended(affected_cells,[mouse_pos])
+                    queued_security_updates.append(mouse_pos)
+                    grid[refunded_city[0]][refunded_city[1]].income += 1
+                    grid[refunded_city[0]][refunded_city[1]].net += 1
+
                 # doubling up
                 if grid[mouse_pos[0]][mouse_pos[1]].entity == mouse_entity and grid[mouse_pos[0]][mouse_pos[1]].color == color: 
                     double_up_flag = True
@@ -153,8 +166,10 @@ def handleEvent(event,grid,moves,color):
                     affected_cells.extend(verify(neighbours(mouse_pos[0],mouse_pos[1],1)))
                     queued_security_updates.append(mouse_pos)
                     wage_change = math.floor(2*(3**(mouse_entity-MAN+1))-2*(3**(mouse_entity-MAN)))*(1 if pick_up_pos is None else 2)
+                    cost = 10*(mouse_entity-CITY) if pick_up_pos is None else 0
+                    grid[selected_city[0]][selected_city[1]].gold -= cost
                     grid[selected_city[0]][selected_city[1]].wages += wage_change
-                    grid[selected_city[0]][selected_city[1]].net -= wage_change
+                    grid[selected_city[0]][selected_city[1]].net -= wage_change + cost
 
                     grid[mouse_pos[0]][mouse_pos[1]].entity = mouse_entity + 1
                 else: 
@@ -176,17 +191,13 @@ def handleEvent(event,grid,moves,color):
 
                             if grid[mouse_pos[0]][mouse_pos[1]].entity == CITY:
                                 # Captured enemy centre, move it
-                                enemy_land, affected_enemy_hall = moveHall(grid,mouse_pos)
-                                if affected_enemy_hall is not None: 
-                                    queued_security_updates.append(affected_enemy_hall)
-                                    appendifnotAppended(affected_cells,verify(neighbours(affected_enemy_hall[0],affected_enemy_hall[1],1)))
-                                affected_cells.extend(enemy_land)
+                                affected_enemy_hall = moveHall(grid,mouse_pos,affected_cells,queued_security_updates)
                             else:
                                 # captured random enemy land
                                 affected_cells.append(grid[mouse_pos[0]][mouse_pos[1]].hall_loc)
-                                affected_enemy_hall = affected_cells[-1]
+                                affected_enemy_hall = grid[mouse_pos[0]][mouse_pos[1]].hall_loc
                                 grid[affected_cells[-1][0]][affected_cells[-1][1]].income -= 1
-                                wage_change = math.floor(2*3**(grid[mouse_pos[0]][mouse_pos[1]].entity-MAN))
+                                wage_change = math.floor(2*3**(grid[mouse_pos[0]][mouse_pos[1]].entity-MAN)) if grid[mouse_pos[0]][mouse_pos[1]].entity >= MAN else 0
                                 grid[affected_cells[-1][0]][affected_cells[-1][1]].wages -= wage_change
                                 grid[affected_cells[-1][0]][affected_cells[-1][1]].net += wage_change - 1
                                 grid[affected_cells[-1][0]][affected_cells[-1][1]].land.remove(mouse_pos)
@@ -210,7 +221,7 @@ def handleEvent(event,grid,moves,color):
                             affected_cells.append(cell)
                             grid[cell[0]][cell[1]].hall_loc = selected_city
                             grid[selected_city[0]][selected_city[1]].land.append(cell)
-                            if grid[cell[0]][cell[1]] != TREE and grid[cell[0]][cell[1]] != PALM:
+                            if grid[cell[0]][cell[1]].entity != TREE and grid[cell[0]][cell[1]].entity != PALM:
                                 grid[selected_city[0]][selected_city[1]].income += 1
                                 grid[selected_city[0]][selected_city[1]].net += 1
 
@@ -219,6 +230,7 @@ def handleEvent(event,grid,moves,color):
                         if selected_city not in affected_cells: affected_cells.append(selected_city)
                         queued_security_updates.append(mouse_pos)
                         appendifnotAppended(affected_cells,verify(neighbours(mouse_pos[0],mouse_pos[1],1)))
+                        appendifnotAppended(affected_cells,[mouse_pos])
                         wage_change = math.floor(2*(3**(mouse_entity-MAN))) if mouse_entity != TOWER else 0
                         cost = (mouse_entity-CITY)*10 if mouse_entity != TOWER else 15
                         grid[selected_city[0]][selected_city[1]].wages += wage_change
