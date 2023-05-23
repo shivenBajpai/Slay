@@ -3,12 +3,31 @@ with contextlib.redirect_stdout(None): import pygame
 import traceback as tb
 from Networking import *
 from Constants import *
-from Debugger import DEBUG,HandleFreezing,GetDebugPos
 from Replay_Utils import Replay
 from math import floor
 import Hex_Utils
 
-def main(filename):
+freeze = False
+debugPos = (1,1)
+
+def HandleFreezing(caption,err):
+    if freeze: 
+        print(err)
+        pygame.display.set_caption(caption)
+        while True:
+            if pygame.event.poll().type == QUIT: break
+    return
+
+def setDebugPos(value):
+    global debugPos
+    debugPos=value
+
+def main(filename,currentconfig):
+    
+    global freeze
+    global debugPos
+    freeze=currentconfig['freeze']
+    DEBUG=currentconfig['debug']
 
     try:
         replayFile = Replay(filename)
@@ -56,7 +75,7 @@ def main(filename):
             if beat == 20: beat = 0 #beat loops from 0 to 19
 
             # handle events
-            for event in pygame.event.get(): handleReplayEvent(event,moves)
+            for event in pygame.event.get(): handleReplayEvent(event,moves,setDebugPos)
 
             try:
                 # check if we have ended
@@ -101,7 +120,7 @@ def main(filename):
             drawEntities(screen, grid, floor(beat/2)%2==0, color)
             drawReplaySideBar(screen, grid, WINDOWX, WINDOWY)
             drawMouseEntity(screen, get_mouse_entity(), pygame.mouse.get_pos())
-            if DEBUG: drawDebugger(screen,grid,GetDebugPos(),WINDOWY,WINDOWX)
+            if DEBUG: drawDebugger(screen,grid,debugPos,WINDOWY,WINDOWX)
 
             #carry out the moves
             for move in moves:

@@ -1,6 +1,5 @@
 from TextureLoader import entities
 from pygame.locals import QUIT, MOUSEMOTION, MOUSEBUTTONDOWN, MOUSEBUTTONUP
-from Debugger import DEBUG,SetDebugPos
 from pygame import Rect, mouse
 from Constants import *
 from Hex_Utils import *
@@ -62,7 +61,7 @@ def getpoints(a,b,n):
         ))
     return points
 
-def handleReplayEvent(event,moves):
+def handleReplayEvent(event,moves,SetDebugPos):
     global mouse_pos, mouse_on_grid
     if event.type == QUIT: raise Exception('User Exited Replay')
 
@@ -70,12 +69,12 @@ def handleReplayEvent(event,moves):
 
     elif event.type == MOUSEBUTTONDOWN and event.button == 1:
 
-        if DEBUG: SetDebugPos(mouse_pos)
+        SetDebugPos(mouse_pos)
 
         if next_button_rect.collidepoint(mouse.get_pos()):
             moves.append('next')
 
-def handleEvent(event,grid,moves,color):
+def handleEvent(event,grid,moves,color,SetDebugPos):
 
     global mouse_pos, mousedown, mouse_entity, valid_locations, pick_up_pos, selected_city, mouse_on_grid
 
@@ -93,7 +92,7 @@ def handleEvent(event,grid,moves,color):
 
         if mouse_on_grid:
 
-            if DEBUG: SetDebugPos(mouse_pos)
+            SetDebugPos(mouse_pos)
 
             if grid[mouse_pos[0]][mouse_pos[1]].color == color:
                 selected_city = grid[mouse_pos[0]][mouse_pos[1]].hall_loc
@@ -148,6 +147,7 @@ def handleEvent(event,grid,moves,color):
 
                 affected_cells.append(mouse_pos)
                 affected_cells.extend(verify(neighbours(mouse_pos[0],mouse_pos[1],1)))
+                queued_security_updates.append(mouse_pos)
 
                 # Reclaimed forest land, refund income loss
                 if grid[mouse_pos[0]][mouse_pos[1]].hall_loc is not None and (grid[mouse_pos[0]][mouse_pos[1]].entity == TREE or grid[mouse_pos[0]][mouse_pos[1]].entity == PALM):
@@ -155,7 +155,6 @@ def handleEvent(event,grid,moves,color):
                     if refunded_city not in affected_cells: affected_cells.append(refunded_city)
                     appendifnotAppended(affected_cells,verify(neighbours(mouse_pos[0],mouse_pos[1],1)))
                     appendifnotAppended(affected_cells,[mouse_pos])
-                    queued_security_updates.append(mouse_pos)
                     grid[refunded_city[0]][refunded_city[1]].income += 1
                     grid[refunded_city[0]][refunded_city[1]].net += 1
 
@@ -164,7 +163,6 @@ def handleEvent(event,grid,moves,color):
                     double_up_flag = True
                     affected_cells.append(selected_city)
                     affected_cells.extend(verify(neighbours(mouse_pos[0],mouse_pos[1],1)))
-                    queued_security_updates.append(mouse_pos)
                     wage_change = math.floor(2*(3**(mouse_entity-MAN+1))-2*(3**(mouse_entity-MAN)))*(1 if pick_up_pos is None else 2)
                     cost = 10*(mouse_entity-CITY) if pick_up_pos is None else 0
                     grid[selected_city[0]][selected_city[1]].gold -= cost
@@ -180,8 +178,6 @@ def handleEvent(event,grid,moves,color):
 
                         affected_cells.append(selected_city)
                         affected_cells.extend(verify(neighbours(mouse_pos[0],mouse_pos[1],1)))
-                        queued_security_updates.append(mouse_pos)
-                        print(selected_city)
                         grid[selected_city[0]][selected_city[1]].income += 1
                         grid[selected_city[0]][selected_city[1]].net += 1
                         grid[selected_city[0]][selected_city[1]].land.append(mouse_pos)
@@ -228,7 +224,6 @@ def handleEvent(event,grid,moves,color):
                     # new unit
                     if pick_up_pos is None:
                         if selected_city not in affected_cells: affected_cells.append(selected_city)
-                        queued_security_updates.append(mouse_pos)
                         appendifnotAppended(affected_cells,verify(neighbours(mouse_pos[0],mouse_pos[1],1)))
                         appendifnotAppended(affected_cells,[mouse_pos])
                         wage_change = math.floor(2*(3**(mouse_entity-MAN))) if mouse_entity != TOWER else 0

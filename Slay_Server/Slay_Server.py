@@ -163,7 +163,6 @@ def main():
                                 print(f'new value of turn is {turn}')
 
                                 while turn < len(activePlayers) and activePlayers[turn]>MAX_CLIENTS:
-                                    print('AI Called')
                                     broadcast(connections,Packet(Packet.PLAY,{'turn':activePlayers[turn]}))
                                     movePacket = AI_Player.play(serverside_grid,activePlayers[turn],turn)
                                     broadcast(connections,movePacket)

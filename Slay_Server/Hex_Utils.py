@@ -123,24 +123,26 @@ def roundupdate(grid):
     
             if not grid[x][y].terrain: continue
             if grid[x][y].entity in (NONE,TOWER,CITY): continue
-
+            #FIXME
             elif grid[x][y].entity == TREE:
                 if random.randint(1,2) == 1:
                     for cell in verify(neighbours(x,y,1)):
-                        if grid[cell[0]][cell[1]].entity == NONE and grid[cell[0]][cell[1]].terrain:
+                        if grid[cell[0]][cell[1]].entity == NONE and grid[cell[0]][cell[1]].terrain and cell not in trees_to_add:
                             trees_to_add.append(cell)
                             affected_cells.append(cell)
                             if grid[cell[0]][cell[1]].hall_loc is not None: 
+                                #print(f'pine spread from {(x,y)} to {cell} changing income from {grid[grid[cell[0]][cell[1]].hall_loc[0]][grid[cell[0]][cell[1]].hall_loc[1]].income} to {grid[grid[cell[0]][cell[1]].hall_loc[0]][grid[cell[0]][cell[1]].hall_loc[1]].income - 1}')
                                 grid[grid[cell[0]][cell[1]].hall_loc[0]][grid[cell[0]][cell[1]].hall_loc[1]].income -= 1
                                 grid[grid[cell[0]][cell[1]].hall_loc[0]][grid[cell[0]][cell[1]].hall_loc[1]].net -= 1
                             break
 
             elif grid[x][y].entity == PALM:
                 for cell in verify(neighbours(x,y,1)):
-                    if grid[cell[0]][cell[1]].entity == NONE and grid[cell[0]][cell[1]].terrain and onShoreLine(cell[0],cell[1],grid):
+                    if grid[cell[0]][cell[1]].entity == NONE and grid[cell[0]][cell[1]].terrain and onShoreLine(cell[0],cell[1],grid) and cell not in trees_to_add and cell not in palms_to_add:
                         palms_to_add.append(cell)
                         affected_cells.append(cell)
                         if grid[cell[0]][cell[1]].hall_loc is not None: 
+                            #print(f'palm spread from {(x,y)} to {cell} changing income from {grid[grid[cell[0]][cell[1]].hall_loc[0]][grid[cell[0]][cell[1]].hall_loc[1]].income} to {grid[grid[cell[0]][cell[1]].hall_loc[0]][grid[cell[0]][cell[1]].hall_loc[1]].income - 1}')
                             grid[grid[cell[0]][cell[1]].hall_loc[0]][grid[cell[0]][cell[1]].hall_loc[1]].income -= 1
                             grid[grid[cell[0]][cell[1]].hall_loc[0]][grid[cell[0]][cell[1]].hall_loc[1]].net -= 1
                         break
@@ -159,10 +161,9 @@ def roundupdate(grid):
 
             else: #Its a unit
                 grid[x][y].playable = True
-                print(f'set {(x,y)} to playable')
                 affected_cells.append((x,y))
     
-    #MARKER
+    #FIXME
     for cell in trees_to_add: grid[cell[0]][cell[1]].entity = TREE
     for cell in palms_to_add: grid[cell[0]][cell[1]].entity = PALM
     for cell in graves_to_add: 
@@ -195,7 +196,6 @@ def winCheck(grid,activePlayers):
     
     for idx, count in enumerate(hallcount):
         if count == 0 and idx+1 in activePlayers:
-            print(f'Trying to remove {idx+1} from active players: {activePlayers} for count {(idx,count)} in {hallcount}')
             activePlayers.remove(idx+1)
     
     if len(activePlayers)==1:
@@ -340,13 +340,11 @@ def createGrid():
         if colorCounts[-1][1]/idealColorCount < 0.8: continue
         break
     
-    #MARKER
-    print(f'{CountCellsofColor(grid,claimed=False)}, in a grid where average should be {(XSIZE*YSIZE-deduction)/MAX_COLOR}')
     addTrees(grid)
     print(f'Successfully made grid in {iteration} iterations')
     return grid
 
-# Code below if for AI Player Use
+# Code below is for AI Player Use
 def getValidPlacementSpots(hall_pos,grid,entity):
 
     valid = []

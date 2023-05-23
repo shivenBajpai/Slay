@@ -41,7 +41,7 @@ def play(grid,color,turn) -> Packet:
         if consideration.requireSpending and consideration.priority <= savePrio: 
             #print(f'----Verified but skipped to save money\n')
             continue
-        print(f'--Verified and selected\n {consideration.description} by {consideration.actor} on {consideration.target}\n using {consideration.required} and cost {consideration.cost}')
+        #print(f'--Verified and selected\n {consideration.description} by {consideration.actor} on {consideration.target}\n using {consideration.required} and cost {consideration.cost}')
         consideration.execute(grid,color)
         AI_Utils.Hex_Utils.appendifnotAppended(affected_cells,consideration.affected_cells)
         movesPlayed +=1

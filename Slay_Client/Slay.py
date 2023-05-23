@@ -3,12 +3,31 @@ with contextlib.redirect_stdout(None): import pygame
 import traceback as tb
 from Networking import *
 from Constants import *
-from Debugger import DEBUG,FREEZE,HandleFreezing,GetDebugPos
 from Replay_Utils import Replay
 from math import floor
 import Hex_Utils
 
+freeze = False
+debugPos = (1,1)
+
+def HandleFreezing(caption,err):
+    if freeze: 
+        print(err)
+        pygame.display.set_caption(caption)
+        while True:
+            if pygame.event.poll().type == QUIT: break
+    return
+
+def setDebugPos(value):
+    global debugPos
+    debugPos=value
+
 def main(color,config):
+
+    global freeze
+    global debugPos
+    freeze=config['freeze']
+    DEBUG=config['debug']
 
     screen = pygame.display.set_mode([640, 480])
     pygame.display.set_caption('Slay')
@@ -43,7 +62,7 @@ def main(color,config):
     # They need pygame initialized first, so we import them later
     from Sound_Utils import restart_mixer
 
-    restart_mixer(config['VOL'])
+    restart_mixer(config['volume'])
 
     from Renderer import cells,drawEntities,drawMapLayer,drawMouseEntity,drawBaseLayer,drawSideBar,reset_renderer,drawDebugger
     from Move_Utils import handleEvent,get_mouse_entity,get_selected_city,set_selected_city,reset_move_utils
@@ -64,7 +83,7 @@ def main(color,config):
             if beat == 20: beat = 0 #beat loops from 0 to 19
 
             # handle events, includes logic
-            for event in pygame.event.get(): handleEvent(event,grid,moves,color)
+            for event in pygame.event.get(): handleEvent(event,grid,moves,color,setDebugPos)
                 
             # talk to server
             network(moves,grid,animations,color,get_selected_city(),set_selected_city,replayFile)
@@ -75,7 +94,7 @@ def main(color,config):
             drawEntities(screen, grid, floor(beat/2)%2==0, color)
             drawSideBar(screen, grid, get_selected_city(), WINDOWX, WINDOWY, color)
             drawMouseEntity(screen, get_mouse_entity(), pygame.mouse.get_pos())
-            if DEBUG: drawDebugger(screen,grid,GetDebugPos(),WINDOWY,WINDOWX)
+            if DEBUG: drawDebugger(screen,grid,debugPos,WINDOWY,WINDOWX)
 
             for index, animation in enumerate(animations):
                 if animation.animation.animate(screen): 

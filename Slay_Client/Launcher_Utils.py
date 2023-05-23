@@ -1,9 +1,11 @@
 from tkinter import *
 from tkinter import ttk
+import os
 import Slay
 import Replayer
 import webbrowser
 import pathlib
+import configparser
 from Replay_Utils import getReplays
 from Networking import connect, disconnect, closeDiscovery, getServers
 from Net_Utils import status,type,address,players
@@ -24,7 +26,7 @@ class MainWindow:
         self.scandata = []
         self.scanips = []
         self.scancall = 0
-        self.volume = 75
+        self.settings = {}
 
         self.window = Tk()
         self.window.title('Slay Launcher')
@@ -73,6 +75,7 @@ class MainWindow:
         self.status_label.grid(column=2, row=4, sticky=(N))
 
         self.initServerlist()
+        self.Loadsettings()
         self.window.after(500,self.ScanforGames)
         self.window.mainloop()
 
@@ -148,6 +151,24 @@ class MainWindow:
             self.selected_server = list(self.tree.item(self.tree.focus()).values())
             self.connect_button.configure(state='enabled')
     
+    def Loadsettings(self) -> None:
+        DEFAULTCONFIG = '''[SETTINGS]
+        volume = 65
+        debug = False
+        freeze = False'''
+
+        if os.path.exists('./config.ini'):
+            config = configparser.ConfigParser()
+            config.read('config.ini')
+            self.settings['volume'] = int(config['SETTINGS']['volume'])
+            self.settings['debug'] = config['SETTINGS']['debug'] == 'True'
+            self.settings['freeze'] = config['SETTINGS']['freeze'] == 'True'
+        else:
+            self.settings['volume'] = 65
+            self.settings['debug'] = False
+            self.settings['freeze'] = False
+            with open('./config.ini','x') as f: f.write(DEFAULTCONFIG) 
+
     def ConnectButtonPress(self) -> None:
         self.StartGame(custom=False)
 
@@ -157,11 +178,17 @@ class MainWindow:
 
     def SettingsButtonPress(self) -> None:
         self.window.event_generate('<<DisableUI>>')
-        SettingsWindow(self.window,self.UpdateSettings,self.volume)
+        SettingsWindow(self.window,self.UpdateSettings,self.settings)
 
     def UpdateSettings(self,settings) -> None:
-        self.volume = settings['volume'].get()
-        print('set volume to',settings['volume'].get())
+        for key in settings.keys():
+            self.settings[key] = settings[key].get()
+
+        newconfig = configparser.ConfigParser()
+        newconfig['SETTINGS'] = {}
+        for key,value in self.settings.items(): newconfig['SETTINGS'][key] = str(value)
+
+        with open('./config.ini','w') as f: newconfig.write(f)
 
     def HelpButtonPress(self) -> None:
         webbrowser.open_new(pathtopdf)
@@ -178,7 +205,7 @@ class MainWindow:
         self.window.event_generate('<<DisableUI>>')
         self.status.set('Playing Replay')
         self.status_label.configure(foreground='green')
-        self.executor.submit(Replayer.main,selection).add_done_callback(self.handleGameReturn)
+        self.executor.submit(Replayer.main,selection,self.settings).add_done_callback(self.handleGameReturn)
 
     def StartGame(self,x=None,custom=True) -> None:
         self.window.event_generate('<<DisableUI>>')
@@ -238,7 +265,8 @@ class MainWindow:
         self.window.update_idletasks()
         self.window.update()
 
-        config['VOL'] = self.volume/100
+        config.update(self.settings)
+        config['volume'] = config['volume'] / 100
         self.executor.submit(Slay.main,color,config).add_done_callback(self.handleGameReturn)
 
     def EnableUI(self,x=None):
@@ -361,10 +389,13 @@ class PasswordPopUp:
         self.mainWindow.after(100,self.runFunction[0],self.runFunction[1],self.pass_field.get())
 
 class SettingsWindow: 
-    def __init__(self,mainWindow: Toplevel,setting_setter,*current_settings) -> None:
+    def __init__(self,mainWindow: Toplevel,setting_setter,current_settings) -> None:
         
         self.setter = setting_setter
-        self.settings = {'volume':IntVar(value=current_settings[0])}
+        #self.settings = {'volume':IntVar(value=current_settings[0])}
+        self.settings = {'volume': IntVar(value=current_settings['volume']),
+                         'debug': BooleanVar(value=current_settings['debug']),
+                         'freeze': BooleanVar(value=current_settings['freeze'])}
 
         self.mainWindow = mainWindow
         self.window = Toplevel(mainWindow)
@@ -388,14 +419,20 @@ class SettingsWindow:
         self.soundScale = Scale(self.soundFrame, from_=0, to=100, orient=HORIZONTAL,variable=self.settings['volume'])
         self.soundScale.grid(column=2,row=2,sticky=(S,W))
 
+        self.devFrame = ttk.Frame(self.mainframe,padding="12 12 12 12",borderwidth=1, relief="solid")
+        self.devFrame.grid(column=1,row=3,columnspan=2,padx=(10,10),pady=(10,10),sticky=(N,W,E))
+        ttk.Label(self.devFrame,text='Developer Settings:',font=('default',12),padding='0 0 0 12').grid(column=1,row=1,sticky=(S,E))
+        self.debugCheckbox = ttk.Checkbutton(self.devFrame, text='Enable Debugger' ,variable=self.settings['debug'],onvalue=True,offvalue=False)
+        self.debugCheckbox.grid(column=1,row=2,sticky=(S,W))
+        self.freezeCheckbox = ttk.Checkbutton(self.devFrame, text='Freeze game on crash' ,variable=self.settings['freeze'],onvalue=True,offvalue=False)
+        self.freezeCheckbox.grid(column=1,row=3,sticky=(S,W))
+
         self.window.mainloop()
 
     def windowClosed(self) -> None:
         self.mainWindow.event_generate('<<EnableUI>>')
         self.mainWindow.after_idle(self.setter,self.settings)
         self.window.destroy()
-
-class HelpWindow: ...
 
 class ReplayWindow:
     def __init__(self,mainWindow,playFunction) -> None:

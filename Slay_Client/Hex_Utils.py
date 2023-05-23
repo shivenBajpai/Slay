@@ -140,7 +140,6 @@ def convertCity(grid,joining_city,selected_city):
     for cell in grid[joining_city[0]][joining_city[1]].land:
         grid[cell[0]][cell[1]].hall_loc = selected_city
 
-    print(selected_city,'is joined by',joining_city)
     grid[selected_city[0]][selected_city[1]].wages += grid[joining_city[0]][joining_city[1]].wages
     grid[selected_city[0]][selected_city[1]].income += grid[joining_city[0]][joining_city[1]].income
     grid[selected_city[0]][selected_city[1]].net += grid[joining_city[0]][joining_city[1]].net
@@ -205,14 +204,10 @@ def checkForDivide(hall_pos,grid):
     actual_land = [hall_pos]
     color_aggregate(hall_pos[0],hall_pos[1],actual_land,actual_land,grid)
     if len(actual_land) != len(grid[hall_pos[0]][hall_pos[1]].land): 
-        print('divide caught!')
         return True, actual_land
-    print('no divide')
     return False, actual_land
 
 def createCity(land,grid,affected_cells,queued_security_updates):
-
-    print(f'createCity logs: \n Called with arguments: {land}')
 
     if len(land)==1: 
         grid[land[0][0]][land[0][1]].hall_loc = None
@@ -258,7 +253,6 @@ def createCity(land,grid,affected_cells,queued_security_updates):
             break
 
     if rng is not None: 
-        print(f' Calling HandleSplits with: rng = {rng}\n its land is {grid[rng[0]][rng[1]].land}')
         HandleSplits(grid,rng,affected_cells,queued_security_updates)
     return rng
 
@@ -270,14 +264,11 @@ def appendifnotAppended(array,items):
 def HandleSplits(grid,original_hall,affected_cells,queued_security_updates):
     isDivide, actual_land = checkForDivide(original_hall,grid)
     if isDivide:
-        
-        print(f'Handlesplit logs:\n Called with Arguments {original_hall},{len(affected_cells)},{len(queued_security_updates)}\n This hall has land: {grid[original_hall[0]][original_hall[1]].land}\n Actual land eval to: {actual_land}')
 
         if affected_cells is not None:
             appendifnotAppended(affected_cells,grid[original_hall[0]][original_hall[1]].land)
 
         if len(actual_land)>1:
-            print(original_hall,'had more than 1, ',len(actual_land))
             split_land = grid[original_hall[0]][original_hall[1]].land.copy()
             grid[original_hall[0]][original_hall[1]].land = actual_land
             grid[original_hall[0]][original_hall[1]].income = 0
@@ -291,7 +282,6 @@ def HandleSplits(grid,original_hall,affected_cells,queued_security_updates):
 
             grid[original_hall[0]][original_hall[1]].net = grid[original_hall[0]][original_hall[1]].gold + grid[original_hall[0]][original_hall[1]].income - grid[original_hall[0]][original_hall[1]].wages
         else:
-            print(original_hall,'had 1, ',len(actual_land))
             split_land = grid[original_hall[0]][original_hall[1]].land.copy()
             split_land.remove(original_hall)
             grid[original_hall[0]][original_hall[1]].land = []

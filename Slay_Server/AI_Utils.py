@@ -64,6 +64,7 @@ class AIMove:
 
         self.affected_cells.append(mouse_pos)
         self.affected_cells.extend(Hex_Utils.verify(Hex_Utils.neighbours(mouse_pos[0],mouse_pos[1],1)))
+        queued_security_updates.append(mouse_pos)
 
         if len(self.required) > 0 and self.required[0][0] == 'use unit':
             consumed = self.required[0][1]
@@ -104,7 +105,6 @@ class AIMove:
             if refunded_city not in self.affected_cells: self.affected_cells.append(refunded_city)
             Hex_Utils.appendifnotAppended(self.affected_cells,Hex_Utils.verify(Hex_Utils.neighbours(mouse_pos[0],mouse_pos[1],1)))
             Hex_Utils.appendifnotAppended(self.affected_cells,[mouse_pos])
-            queued_security_updates.append(mouse_pos)
             grid[refunded_city[0]][refunded_city[1]].income += 1
             grid[refunded_city[0]][refunded_city[1]].net += 1
 
@@ -112,7 +112,6 @@ class AIMove:
         if grid[mouse_pos[0]][mouse_pos[1]].entity == mouse_entity and grid[mouse_pos[0]][mouse_pos[1]].color == color: 
             self.affected_cells.append(selected_city)
             self.affected_cells.extend(Hex_Utils.verify(Hex_Utils.neighbours(mouse_pos[0],mouse_pos[1],1)))
-            queued_security_updates.append(mouse_pos)
             wage_change = math.floor(2*(3**(mouse_entity-Constants.MAN+1))-2*(3**(mouse_entity-Constants.MAN))*(1 if pick_up_pos is None else 2))
             grid[selected_city[0]][selected_city[1]].wages += wage_change
             grid[selected_city[0]][selected_city[1]].gold -= self.cost # This property was set during object creation
@@ -127,7 +126,6 @@ class AIMove:
 
                 self.affected_cells.append(selected_city)
                 self.affected_cells.extend(Hex_Utils.verify(Hex_Utils.neighbours(mouse_pos[0],mouse_pos[1],1)))
-                queued_security_updates.append(mouse_pos)
                 grid[selected_city[0]][selected_city[1]].income += 1
                 grid[selected_city[0]][selected_city[1]].net += 1
                 grid[selected_city[0]][selected_city[1]].land.append(mouse_pos)
@@ -174,7 +172,6 @@ class AIMove:
             # new unit
             if pick_up_pos is None:
                 if selected_city not in self.affected_cells: self.affected_cells.append(selected_city)
-                queued_security_updates.append(mouse_pos)
                 Hex_Utils.appendifnotAppended(self.affected_cells,Hex_Utils.verify(Hex_Utils.neighbours(mouse_pos[0],mouse_pos[1],1)))
                 Hex_Utils.appendifnotAppended(self.affected_cells,[mouse_pos])
                 wage_change = math.floor(2*(3**(mouse_entity-Constants.MAN))) if mouse_entity != Constants.TOWER else 0
