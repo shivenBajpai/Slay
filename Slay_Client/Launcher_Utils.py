@@ -1,12 +1,15 @@
 from tkinter import *
 from tkinter import ttk
-from concurrent.futures import ThreadPoolExecutor
 import Slay
 import Replayer
+import webbrowser
+import pathlib
 from Replay_Utils import getReplays
 from Networking import connect, disconnect, closeDiscovery, getServers
 from Net_Utils import status,type,address,players
 from socket import gethostbyname
+
+pathtopdf = r'file://' + str(pathlib.Path().resolve()/ 'Slay_Assets' / 'Help.pdf')
 
 class MainWindow:
 
@@ -56,7 +59,7 @@ class MainWindow:
         self.settings_button = ttk.Button(self.buttonframe, text='Settings', command=self.SettingsButtonPress, padding='0 2 0 2',width=30)
         self.settings_button.grid(column=3,row=1,sticky=(W))
 
-        self.help_button = ttk.Button(self.buttonframe, text='Help', command=self.HelpButtonPress, padding='0 2 0 2',width=30)
+        self.help_button = ttk.Button(self.buttonframe, text='Help↗', command=self.HelpButtonPress, padding='0 2 0 2',width=30)
         self.help_button.grid(column=1,row=2,sticky=(E),pady=(8,0))
 
         self.credits_button = ttk.Button(self.buttonframe, text='Credits', command=self.CreditsButtonPress, padding='0 2 0 2',width=30)
@@ -161,7 +164,7 @@ class MainWindow:
         print('set volume to',settings['volume'].get())
 
     def HelpButtonPress(self) -> None:
-        print('Help pressed')
+        webbrowser.open_new(pathtopdf)
 
     def CreditsButtonPress(self) -> None:
         self.window.event_generate('<<DisableUI>>')
