@@ -503,7 +503,7 @@ class CreditsWindow:
         self.header = ttk.Label(self.mainframe,text='Credits',font=('Helvetica',22),padding='0 15 0 15')
         self.header.grid(column=1,row=1,columnspan=3,sticky=(N))
 
-        self.text = ttk.Label(self.mainframe,text='This was created by me Shiven Bajpai for\n a computer science project\n\nOriginal Game made by Sean\'O Connor and a official remake is available\n for purchase on steam today\n\nAll graphics are my own'.center(72))
+        self.text = ttk.Label(self.mainframe,text='This was created by me Shiven Bajpai for\n a computer science project\n\nOriginal Game made by Sean\'O Connor and a official remake is available\n for purchase on steam today\n\nAll graphics are my own\nSounds from freesound.org and mixit.co'.center(72))
         self.text.grid(column=2,row=2,sticky=(N),pady=(35,25))
         self.window.mainloop()
 
