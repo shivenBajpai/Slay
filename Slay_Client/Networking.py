@@ -2,6 +2,7 @@ from Net_Utils import *
 from Hex_Utils import fixHighlighting
 from Constants import NAME_MAPPING
 from pygame.locals import QUIT
+import integratedServer.Net_Utils
 import socket
 import traceback as tb
 
@@ -168,7 +169,7 @@ def getServers(servers,server_ips):
             if data == b'discovery': continue
             try: data = pickle.loads(data)
             except: continue
-            if data.__class__ != ServerInfo: continue
+            if data.__class__ != ServerInfo and data.__class__ != integratedServer.Net_Utils.ServerInfo: continue
             if data.Address in server_ips: continue
             servers.append(data)
             server_ips.append(data.Address)

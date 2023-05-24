@@ -1,0 +1,2 @@
+PROTECT = 1 # Per Case
+PROTECTHALL = 2

@@ -1,0 +1,5 @@
+CONNECTSTOCITY = 2 # Per Case
+CONNECTSTOMORE = 1 # Per Case
+HASTREE = 1
+UNPROTECT = -0.25 # Per unit
+PROTECT = 0.5 # Per unit

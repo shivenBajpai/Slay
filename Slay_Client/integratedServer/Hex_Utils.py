@@ -1,6 +1,6 @@
 import math
 import random
-from Constants import *
+from integratedServer.Constants import *
 
 class Hex:
     def __init__(self, color) -> None:
@@ -123,7 +123,6 @@ def roundupdate(grid):
     
             if not grid[x][y].terrain: continue
             if grid[x][y].entity in (NONE,TOWER,CITY): continue
-
             elif grid[x][y].entity == TREE:
                 if random.randint(1,2) == 1:
                     for cell in verify(neighbours(x,y,1)):

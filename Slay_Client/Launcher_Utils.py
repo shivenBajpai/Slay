@@ -6,6 +6,13 @@ import Replayer
 import webbrowser
 import pathlib
 import configparser
+import importlib
+import integratedServer.Constants
+import integratedServer.Slay_Server
+import integratedServer.Net_Utils
+import integratedServer.Hex_Utils
+import integratedServer.AI_Player
+import integratedServer.AI_Utils
 from Replay_Utils import getReplays
 from Networking import connect, disconnect, closeDiscovery, getServers
 from Net_Utils import status,type,address,players
@@ -51,24 +58,51 @@ class MainWindow:
         self.buttonframe = ttk.Frame(self.mainframe,padding="0 0 15 24")
         self.buttonframe.grid(column=1, row=3,columnspan=3, sticky=(N))
 
-        self.connect_button = ttk.Button(self.buttonframe, text='Connect', command=self.ConnectButtonPress, padding='0 2 0 2',width=30)
-        self.connect_button.grid(column=1,row=1,sticky=(E))
+        '''self.connect_button = ttk.Button(self.buttonframe, text='Connect', command=self.ConnectButtonPress, padding='0 2 0 2',width=30)
+        self.connect_button.grid(column=1,row=1,columnspan=2,sticky=(E))
         self.connect_button.configure(state='disabled')
 
         self.direct_connect_button = ttk.Button(self.buttonframe, text='Direct Connect', command=self.DirectConnectButtonPress, padding='0 2 0 2',width=30)
-        self.direct_connect_button.grid(column=2,row=1,sticky=(N),padx=(8,8))
+        self.direct_connect_button.grid(column=3,row=1,columnspan=2,sticky=(N),padx=(8,8))
 
-        self.settings_button = ttk.Button(self.buttonframe, text='Settings', command=self.SettingsButtonPress, padding='0 2 0 2',width=30)
-        self.settings_button.grid(column=3,row=1,sticky=(W))
+        self.server_button = ttk.Button(self.buttonframe, text='Start Game On Lan', command=self.ServerButtonPress, padding='0 2 0 2',width=30)
+        self.server_button.grid(column=5,row=1,columnspan=2,sticky=(W))
 
-        self.help_button = ttk.Button(self.buttonframe, text='Help↗', command=self.HelpButtonPress, padding='0 2 0 2',width=30)
-        self.help_button.grid(column=1,row=2,sticky=(E),pady=(8,0))
+        self.settings_button = ttk.Button(self.buttonframe, text='Settings', command=self.SettingsButtonPress, padding='0 2 0 2',width=45)
+        self.settings_button.grid(column=1,row=2,columnspan=3,sticky=(E),pady=(8,8),padx=(4,4))
+        
+        self.replays_button = ttk.Button(self.buttonframe, text='Replays', command=self.ReplayButtonPress, padding='0 2 0 2',width=45)
+        self.replays_button.grid(column=4,row=2,columnspan=3,sticky=(W),pady=(8,8),padx=(4,4))
 
-        self.credits_button = ttk.Button(self.buttonframe, text='Credits', command=self.CreditsButtonPress, padding='0 2 0 2',width=30)
-        self.credits_button.grid(column=2,row=2,sticky=(E),padx=(8,8),pady=(8,0))
+        self.help_button = ttk.Button(self.buttonframe, text='Help↗', command=self.HelpButtonPress, padding='0 2 0 2',width=45)
+        self.help_button.grid(column=1,row=3,columnspan=3,sticky=(E),padx=(4,4))
 
-        self.replays_button = ttk.Button(self.buttonframe, text='Replays', command=self.ReplayButtonPress, padding='0 2 0 2',width=30)
-        self.replays_button.grid(column=3,row=2,sticky=(E),pady=(8,0))
+        self.credits_button = ttk.Button(self.buttonframe, text='Credits', command=self.CreditsButtonPress, padding='0 2 0 2',width=45)
+        self.credits_button.grid(column=4,row=3,sticky=(W),columnspan=3,padx=(4,4))'''
+
+        #MARKER
+
+        self.connect_button = ttk.Button(self.buttonframe, text='Connect', command=self.ConnectButtonPress, padding='0 2 0 2',width=90)
+        self.connect_button.grid(column=1,row=1,columnspan=6,sticky=(N),padx=(8,8))
+        self.connect_button.configure(state='disabled')
+
+        self.direct_connect_button = ttk.Button(self.buttonframe, text='Direct Connect', command=self.DirectConnectButtonPress, padding='0 2 0 2',width=90)
+        self.direct_connect_button.grid(column=1,row=2,columnspan=6,sticky=(N),padx=(8,8),pady=(8,8))
+
+        self.server_button = ttk.Button(self.buttonframe, text='Start Game On LAN', command=self.ServerButtonPress, padding='0 2 0 2',width=90)
+        self.server_button.grid(column=1,row=3,columnspan=6,sticky=(N),padx=(8,8))
+
+        self.settings_button = ttk.Button(self.buttonframe, text='Settings', command=self.SettingsButtonPress, padding='0 2 0 2',width=44)
+        self.settings_button.grid(column=1,row=4,columnspan=3,sticky=(E),pady=(8,8),padx=(3,3))
+        
+        self.replays_button = ttk.Button(self.buttonframe, text='Replays', command=self.ReplayButtonPress, padding='0 2 0 2',width=44)
+        self.replays_button.grid(column=4,row=4,columnspan=3,sticky=(W),pady=(8,8),padx=(3,3))
+
+        self.help_button = ttk.Button(self.buttonframe, text='Help↗', command=self.HelpButtonPress, padding='0 2 0 2',width=44)
+        self.help_button.grid(column=1,row=5,columnspan=3,sticky=(E),padx=(3,3))
+
+        self.credits_button = ttk.Button(self.buttonframe, text='Credits', command=self.CreditsButtonPress, padding='0 2 0 2',width=44)
+        self.credits_button.grid(column=4,row=5,sticky=(W),columnspan=3,padx=(3,3))
 
         self.status = StringVar()
         self.status_label = ttk.Label(self.mainframe,textvariable=self.status,padding='0 8 0 0')
@@ -148,8 +182,8 @@ class MainWindow:
             self.selected_server = None
             self.connect_button.configure(state='disabled')
         else: 
+            if self.connect_button.config()['state'][-1] != 'enabled': self.connect_button.configure(state='enabled')
             self.selected_server = list(self.tree.item(self.tree.focus()).values())
-            self.connect_button.configure(state='enabled')
     
     def Loadsettings(self) -> None:
         DEFAULTCONFIG = '''[SETTINGS]
@@ -196,6 +230,10 @@ class MainWindow:
     def CreditsButtonPress(self) -> None:
         self.window.event_generate('<<DisableUI>>')
         CreditsWindow(self.window)
+        
+    def ServerButtonPress(self) -> None:
+        self.window.event_generate('<<DisableUI>>')
+        integratedServerWindow(self.window,self.executor,self.run)
 
     def ReplayButtonPress(self) -> None:
         self.window.event_generate('<<DisableUI>>')
@@ -211,7 +249,6 @@ class MainWindow:
         self.window.event_generate('<<DisableUI>>')
         try: del self.connection_window
         except (Exception) as err: pass
-        print('Game Start initiated')
         if custom:
             info = connect(self.custom_server[0],self.custom_server[1],info_req=True)
             if not info['public']: PasswordPopUp(self.window,(self.run,self.custom_server))
@@ -233,6 +270,7 @@ class MainWindow:
         self.window.event_generate('<<EnableUI>>')
 
     def run(self,server,password=None) -> None:
+        self.window.event_generate('<<DisableUI>>')
         ip,port = server
         
         if port<1 or port>65535:
@@ -277,6 +315,7 @@ class MainWindow:
         self.help_button.configure(state='enabled')
         self.credits_button.configure(state='enabled')
         self.replays_button.configure(state='enabled')
+        self.server_button.configure(state='enabled')
         self.tree.configure(selectmode='browse')
 
     def DisableUI(self,x=None):
@@ -287,6 +326,7 @@ class MainWindow:
         self.help_button.configure(state='disabled')
         self.credits_button.configure(state='disabled')
         self.replays_button.configure(state='disabled')
+        self.server_button.configure(state='disabled')
         self.tree.configure(selectmode='none')
         self.window.update_idletasks()
 
@@ -392,7 +432,6 @@ class SettingsWindow:
     def __init__(self,mainWindow: Toplevel,setting_setter,current_settings) -> None:
         
         self.setter = setting_setter
-        #self.settings = {'volume':IntVar(value=current_settings[0])}
         self.settings = {'volume': IntVar(value=current_settings['volume']),
                          'debug': BooleanVar(value=current_settings['debug']),
                          'freeze': BooleanVar(value=current_settings['freeze'])}
@@ -511,3 +550,178 @@ class CreditsWindow:
     def windowClosed(self) -> None:
         self.mainWindow.event_generate('<<EnableUI>>')
         self.window.destroy()
+
+class integratedServerWindow:
+    def __init__(self,mainWindow: Toplevel,executor,runCallback) -> None:
+
+        self.mainWindow = mainWindow
+        self.executor = executor
+        self.runCallback = runCallback
+        self.window = Toplevel(mainWindow)
+        self.window.title('Slay - Start Local Game')
+        self.window.iconbitmap('icon.ico')
+        self.window.resizable(False,False)
+        self.window.columnconfigure(0, weight=1)
+        self.window.rowconfigure(0, weight=1)
+        self.window.protocol("WM_DELETE_WINDOW", self.windowClosed)
+
+        self.loadSettings()
+
+        self.mainframe = ttk.Frame(self.window,padding="3 3 12 12")
+        self.mainframe.grid(column=0, row=0, sticky=(N, W, E, S))
+
+        self.header = ttk.Label(self.mainframe,text='Pick settings to start game on LAN',font=('Helvetica',22),padding='50 25 50 15')
+        self.header.grid(column=1,row=1,columnspan=2,sticky=(N,W))
+
+        self.serverFrame = ttk.Frame(self.mainframe,padding="12 12 12 12",borderwidth=1, relief="solid")
+        self.serverFrame.grid(column=1,row=2,columnspan=2,padx=(10,10),sticky=(W,E))
+        ttk.Label(self.serverFrame,text='Server Settings:',font=('default',12),padding='0 0 0 12').grid(column=1,row=1,sticky=(S,W))
+
+        ttk.Label(self.serverFrame,text='Port:',padding='0 0 0 4').grid(column=1,row=2,sticky=(S,E))
+        self.portField = ttk.Entry(self.serverFrame,textvariable=self.settings['PORT'],width=7)
+        self.portField.grid(column=2,row=2,sticky=(S,W))
+
+        ttk.Label(self.serverFrame,text='Password (Leave empty for none):',padding='0 0 0 4').grid(column=1,row=3,sticky=(S,E))
+        self.passField = ttk.Entry(self.serverFrame,textvariable=self.settings['PASSWORD'],width=30)
+        self.passField.grid(column=2,row=3,sticky=(S,W))
+
+        self.discoveryCheckbox = ttk.Checkbutton(self.serverFrame, text='Enable Discovery over LAN' ,variable=self.settings['DISCOVERABLE'],onvalue=True,offvalue=False,command=self.discoveryToggle)
+        self.discoveryCheckbox.grid(column=1,row=4,sticky=(S,E))
+
+        ttk.Label(self.serverFrame,text='Server Name:',padding='0 0 0 4').grid(column=1,row=5,sticky=(S,E))
+        self.nameField = ttk.Entry(self.serverFrame,textvariable=self.settings['NAME'],width=30)
+        self.nameField.grid(column=2,row=5,sticky=(S,W))
+
+
+        self.gameFrame = ttk.Frame(self.mainframe,padding="12 12 12 12",borderwidth=1, relief="solid")
+        self.gameFrame.grid(column=1,row=3,columnspan=2,padx=(10,10),pady=(10,10),sticky=(N,W,E))
+        ttk.Label(self.gameFrame,text='Game Settings:',font=('default',12),padding='0 0 0 12').grid(column=1,row=1,sticky=(S,W))
+
+        ttk.Label(self.gameFrame,text='Map Size (X):',padding='0 0 0 4').grid(column=1,row=2,sticky=(S,E))
+        self.XSlider = Scale(self.gameFrame, from_=1, to=20, orient=HORIZONTAL,variable=self.settings['XSIZE'])
+        self.XSlider.grid(column=2,row=2,sticky=(S,W))
+
+        ttk.Label(self.gameFrame,text='Map Size (Y):',padding='0 0 0 4').grid(column=1,row=3,sticky=(S,E))
+        self.YSlider = Scale(self.gameFrame, from_=1, to=20, orient=HORIZONTAL,variable=self.settings['YSIZE'])
+        self.YSlider.grid(column=2,row=3,sticky=(S,W))
+
+        ttk.Label(self.gameFrame,text='No. Of Players:',padding='0 0 0 4').grid(column=1,row=4,sticky=(S,E))
+        self.PlayerSlider = Scale(self.gameFrame, from_=2, to=7, orient=HORIZONTAL,variable=self.settings['MAX_COLOR'],command=self.playersSliderUpdate)
+        self.PlayerSlider.grid(column=2,row=4,sticky=(S,W))
+
+        ttk.Label(self.gameFrame,text='No. Of Bots:',padding='0 0 0 4').grid(column=1,row=5,sticky=(S,E))
+        self.BotSlider = Scale(self.gameFrame, from_=0, to=7, orient=HORIZONTAL,variable=self.settings['BOTS'])
+        self.BotSlider.grid(column=2,row=5,sticky=(S,W))
+
+        self.playersSliderUpdate()
+
+        self.buttonFrame = ttk.Frame(self.mainframe,padding="12 12 12 12",borderwidth=1)
+        self.buttonFrame.grid(column=1,row=4,columnspan=2,padx=(10,10),pady=(10,10),sticky=(N))
+
+        connectButton = ttk.Button(self.buttonFrame, text="Start & Join", command=self.confirmPress, padding='0 2 0 2',width=30)
+        connectButton.grid(column=1, row=1,sticky=(N,E))
+        cancelButton = ttk.Button(self.buttonFrame, text="Cancel", command=self.windowClosed, padding='0 2 0 2',width=30)
+        cancelButton.grid(column=2, row=1,sticky=(N,W))
+
+        self.window.mainloop()
+
+    def discoveryToggle(self) -> None:
+        self.nameField.configure(state=('enabled' if self.settings['DISCOVERABLE'].get() else 'disabled'))
+
+    def playersSliderUpdate(self,_=None) -> None:
+        if self.settings['BOTS'].get() >= self.settings['MAX_COLOR'].get():
+            self.settings['BOTS'].set(self.settings['MAX_COLOR'].get() - 1)
+        
+        self.BotSlider.configure(to=self.settings['MAX_COLOR'].get()-1)
+
+    def windowClosed(self) -> None:
+        self.saveSettings()
+        self.mainWindow.event_generate('<<EnableUI>>')
+        self.window.destroy()
+
+    def confirmPress(self) -> None:
+        self.windowClosed()
+        importlib.reload(integratedServer.Constants)
+        importlib.reload(integratedServer.Net_Utils)
+        importlib.reload(integratedServer.AI_Utils)
+        importlib.reload(integratedServer.AI_Player)
+        importlib.reload(integratedServer.Hex_Utils)
+        importlib.reload(integratedServer.Slay_Server)
+        self.executor.submit(integratedServer.Slay_Server.main)
+        self.runCallback(('localhost',int(self.settings['PORT'].get())),self.settings['PASSWORD'].get())
+
+    def loadSettings(self) -> None:
+
+        DEFAULTCONFIG = '''[BASIC]
+# Port on which server listens, ports 0-1023 are privileged and may require elevated access
+Port = 4444
+
+# Map size in number of cells, too many the window might be too big
+# Also larger maps take much longer to generate
+MapXSize = 15
+MapYSize = 15
+
+# Number of players needed for the game and the number of bots in the game (there must be atleast one human player)
+NumberOfPlayers = 2
+NumberofBots = 0
+
+# Automatically-Relaunch server every time game ends/crashes
+AutoReboot = False
+
+[DISCOVERY]
+# Allow other computers on the local network to find and connect to this server
+# If set to False, all discovery related options are meaningless
+EnableDiscovery = True
+
+# Name of server in server list on client side
+DiscoveryServerName = Slay Server
+
+# Password required to join
+# If empty, password will not be required
+Password = 
+
+[ADVANCED]
+# Dont touch unless you know what you're doing
+# IP on which server socket requests to listen
+IP = 0.0.0.0'''
+
+        self.settings = {}
+        self.settings['PORT'] = StringVar(value='4444')
+        self.settings['XSIZE'] = IntVar(value=15)
+        self.settings['YSIZE'] = IntVar(value=15)
+        self.settings['MAX_COLOR'] = IntVar(value=2)
+        self.settings['BOTS'] = IntVar(value=0)
+        self.settings['DISCOVERABLE'] = BooleanVar(value=True)
+        self.settings['NAME'] = StringVar(value='Local Slay Server')
+        self.settings['PASSWORD'] = StringVar(value='')
+
+        if os.path.exists('./integratedServer/config.ini'):
+            config = configparser.ConfigParser()
+            config.read('./integratedServer/config.ini')
+            self.settings['PORT'].set(str(config['BASIC']['Port']))
+            self.settings['XSIZE'].set(int(config['BASIC']['MapXSize']))
+            self.settings['YSIZE'].set(int(config['BASIC']['MapYSize']))
+            self.settings['MAX_COLOR'].set(int(config['BASIC']['NumberOfPlayers']))
+            self.settings['BOTS'].set(int(config['BASIC']['NumberOfBots']))
+            self.settings['DISCOVERABLE'].set(config['DISCOVERY']['EnableDiscovery'] == 'True')
+            self.settings['NAME'].set(config['DISCOVERY']['DiscoveryServerName'])
+            self.settings['PASSWORD'].set(config['DISCOVERY']['Password'])
+        else:
+            with open('./config.ini','x') as f: f.write(DEFAULTCONFIG)
+            self.windowClosed()
+
+    def saveSettings(self) -> None:
+
+        config = configparser.ConfigParser()
+        config.read('./integratedServer/config.ini')
+
+        config['BASIC']['Port'] = str(self.settings['PORT'].get())
+        config['BASIC']['MapXSize'] = str(self.settings['XSIZE'].get())
+        config['BASIC']['MapYSize'] = str(self.settings['YSIZE'].get())
+        config['BASIC']['NumberOfPlayers'] = str(self.settings['MAX_COLOR'].get())
+        config['BASIC']['NumberOfBots'] = str(self.settings['BOTS'].get())
+        config['DISCOVERY']['EnableDiscovery'] = str(self.settings['DISCOVERABLE'].get())
+        config['DISCOVERY']['DiscoveryServerName'] = str(self.settings['NAME'].get())
+        config['DISCOVERY']['Password'] = str(self.settings['PASSWORD'].get())
+
+        with open('./integratedServer/config.ini','w') as f: config.write(f)
