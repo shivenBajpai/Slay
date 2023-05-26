@@ -1,9 +1,9 @@
 <h1>CLIENT INFO:</h1>
 
-To run the client run `New_Launcher.py`, NOT `Slay.py`
+Entry point for client is `Launcher.py`
 
 You can select any server found to be running on your LAN and press connect to join
 Or you can open the direct connection menu and enter IP, port to connect in that manner
+Or start a local server on your LAN from within the client itself
 
-help window is currently pending
-ability to save and watch replays of games is planned to be added in the future
+Other menus are self explanatory

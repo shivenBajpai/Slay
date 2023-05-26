@@ -1,21 +1,29 @@
-## SLAY (W.I.P)
+## SLAY
 
 This is a recreation of the game Slay, originally created by Sean O'Connor in 1995, But with over the internet* multiplayer using a server and client architecture
 
-This game is fully functional, although there are a couple bugs to be squashed and the help tab is not yet implemented
+There are some key differences:
 
-There are some differences in gameplay:
-
-- Maps are randomly generated instead of preset
+- Maps are randomly generated instead of preset and can be as large as you like**
 - Units have fixed travel distance (2 cells)
-- Theoretically infinite max players** (NOT IMPLEMENTED, CURRENT MAX 4)
-- New Graphics
+- Theoretically infinite max players, but only upto 7 right now because i cant decide on good colors
+- New Graphics and Sounds
+- Game Replays are available
 
-To run the game, run `Launcher.py` in the Slay_Client directory
+## Installation
 
-To start server run `Supervisor.py` in Slay_Server directory
+The Built executables can be downloaded from the releases tab
+There is a installer available for windows systems.
+I am not able to test the code on other platforms but you should theoretically be able to download the .zip file and run the game
+
+The game should be fully functional now and ill update the readme if any bugs are found
+I doubt ill be working on this project any further
+
+## Build Instructions
+
+If you wish to build the code locally, The included build scripts in both Client and Server directories use pyinstaller to generate the executables
+Also included is the installer build script based on WinRAR's CLI mode That was used to generate the sfx installer executable
+Code was built using python ver 3.10.6
 
 \*Requires Port Forwarding to connect to servers outside your local network<br>
-\*\*Due to map generation taking much longer for high player counts, and due to more players requiring a map size that might make the window too big\<testing pending on this\>. In practice this gets limited to moderate number of players.
-
-Created using python ver 3.10.6, if you have weird issues maybe updating python will help
+\*\*At a certain point youll run out of screen space but if you have a widescreen, go ham.
