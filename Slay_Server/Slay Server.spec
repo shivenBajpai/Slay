@@ -5,10 +5,10 @@ block_cipher = None
 
 
 a = Analysis(
-    ['Slay_Server.py'],
+    ['Supervisor.py'],
     pathex=[],
     binaries=[],
-    datas=[('README.md', '.')],
+    datas=[('README.md', '.'), ('postinstall.bat', '.'), ('banner.png', '.')],
     hiddenimports=[],
     hookspath=[],
     hooksconfig={},
@@ -37,6 +37,7 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
+    uac_admin=True,
     icon=['icon.ico'],
 )
 coll = COLLECT(

@@ -4,7 +4,7 @@ import os
 config = configparser.ConfigParser()
 
 if not os.path.exists('./config.ini'):
-    print('Config file missing!, Generating default config and shutting down')
+    print('Config file missing!, Generating default config file')
     DEFAULTCONFIG = '''[BASIC]
 # Port on which server listens, ports 0-1023 are privileged and may require elevated access
 Port = 4444
@@ -40,8 +40,6 @@ IP = 0.0.0.0'''
     f = open("config.ini", "w")
     f.write(DEFAULTCONFIG)
     f.close()
-
-    raise SystemExit()
 
 try:
     config.read('config.ini')

@@ -1,0 +1,1 @@
+START CMD /C "ECHO Installation successful! Thank you for installing Slay && ECHO %~dp0 && PAUSE"

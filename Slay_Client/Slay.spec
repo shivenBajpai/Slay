@@ -8,7 +8,7 @@ a = Analysis(
     ['Launcher.py'],
     pathex=[],
     binaries=[],
-    datas=[('README.md', '.'), ('Slay_Assets', 'Slay_Assets'), ('replays', 'replays'), ('icon.ico', '.')],
+    datas=[('README.md', '.'), ('setup.bat', '.'), ('Slay_Assets', 'Slay_Assets'), ('integratedServer', 'integratedServer'), ('replays', 'replays'), ('icon.ico', '.'), ('banner.png', '.')],
     hiddenimports=[],
     hookspath=[],
     hooksconfig={},
@@ -37,6 +37,7 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
+    uac_admin=True,
     icon=['icon.ico'],
 )
 coll = COLLECT(

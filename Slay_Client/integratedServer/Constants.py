@@ -37,7 +37,7 @@ Password =
 # Dont touch unless you know what you're doing
 # IP on which server socket requests to listen
 IP = 0.0.0.0'''
-    f = open("config.ini", "w")
+    f = open("./integratedServer/config.ini", "w")
     f.write(DEFAULTCONFIG)
     f.close()
 
