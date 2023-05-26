@@ -510,7 +510,7 @@ class ReplayWindow:
     
     def confirmPress(self) -> None:
         self.windowClosed()
-        self.playFunction(self.selection)
+        if self.selection is not None: self.playFunction(self.selection)
 
     def selectionHandler(self,_) -> None:
         if len(self.listbox.curselection()) == 0: 
