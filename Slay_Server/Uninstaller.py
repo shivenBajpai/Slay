@@ -26,7 +26,7 @@ else:
 
 try:
     with winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, REG_PATH, 0, winreg.KEY_WRITE) as registry_key:
-            winreg.DeleteKey(registry_key, 'Slay Server')
+            winreg.DeleteKey(registry_key, 'Slay_Server')
             winreg.CloseKey(registry_key)
             print('Registry Entries removed')
 except WindowsError as err:

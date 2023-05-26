@@ -9,6 +9,7 @@ import traceback as tb
 turn = 0 # corresponds to color/userid whose turn it is. This is not the same as serverside variable turn
 color = 0
 client = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
+waitingFlag = False
 
 timeoutErrors = (TimeoutError,socket.timeout)
 
@@ -110,6 +111,7 @@ def declareExit():
     send_message(client,Packet(Packet.LEAVE))
 
 def is_our_turn():
+    if waitingFlag: return False
     return turn == color
 
 def get_turn():
@@ -117,7 +119,7 @@ def get_turn():
 
 def network(moves,grid,animations,color,selected_city,set_selected_city,replayFile):
 
-    global our_turn, turn
+    global our_turn, turn, waitingFlag
 
     try:
         pack = recieve_message(client)
@@ -141,6 +143,7 @@ def network(moves,grid,animations,color,selected_city,set_selected_city,replayFi
                     animations.append(move)
 
         elif pack.code == Packet.PLAY:
+            waitingFlag = False
             turn = pack.data['turn']
 
         elif pack.code == Packet.END:
@@ -156,7 +159,9 @@ def network(moves,grid,animations,color,selected_city,set_selected_city,replayFi
     except (ConnectionAbortedError,ConnectionResetError): raise GameEndingException('Server terminated connection,\nNo context')
 
     if len(moves) != 0:
-        if moves[0].__class__ == str: send_message(client,Packet(Packet.END_TURN))  
+        if moves[0].__class__ == str: 
+            waitingFlag = True
+            send_message(client,Packet(Packet.END_TURN))  
         else: send_message(client,Packet(Packet.MOVE,moves[0]))
         our_turn=False
         del moves[0]
