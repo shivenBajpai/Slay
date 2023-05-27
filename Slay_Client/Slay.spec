@@ -8,7 +8,7 @@ slay_a = Analysis(
     ['Launcher.py'],
     pathex=[],
     binaries=[],
-    datas=[('README.md', '.'), ('postinstall.bat', '.'), ('Slay_Assets', 'Slay_Assets'), ('integratedServer', 'integratedServer'), ('replays', 'replays'), ('icon.ico', '.'), ('banner.png', '.')],
+    datas=[('README.md', '.'), ('Slay_Assets', 'Slay_Assets'), ('integratedServer', 'integratedServer'), ('replays', 'replays'), ('icon.ico', '.'), ('banner.png', '.')],
     hiddenimports=[],
     hookspath=[],
     hooksconfig={},
