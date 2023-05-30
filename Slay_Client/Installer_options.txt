@@ -2,6 +2,7 @@
 
 Path=Slay
 Setup=setup.exe
+Overwrite=1
 Title=Install Slay
 Text
 {
