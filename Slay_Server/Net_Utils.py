@@ -18,13 +18,13 @@ def fast_recieve_message(socket):
     return msg
 
 def recieve_message(socket,debug=True):
-    remaining = int(socket.recv(HEADERSIZE))
+    total_size = int(socket.recv(HEADERSIZE))
     msg = b''
-    while remaining!=0:
-        if remaining > 2048: size = 2048
+    while len(msg)!=total_size:
+        remaining = total_size - len(msg)
+        if remaining > 128: size = 128
         else: size = remaining
         msg = msg + socket.recv(size)
-        remaining = remaining - size
     return pickle.loads(msg)
 
 def broadcast(connections,message):

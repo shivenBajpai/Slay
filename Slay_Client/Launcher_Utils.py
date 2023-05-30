@@ -249,8 +249,23 @@ class MainWindow:
         self.window.event_generate('<<DisableUI>>')
         try: del self.connection_window
         except (Exception) as err: pass
+
+        try:
+            ip = gethostbyname(self.custom_server[0])
+            print(ip)
+        except (Exception):
+            print('gaierror')
+            self.status.set('Error resolving address,\ntry again if the issue \npersists,you have the wrong \naddress')
+            self.status_label.configure(foreground='red')
+            self.window.event_generate('<<EnableUI>>')
+            return
+
         if custom:
-            info = connect(self.custom_server[0],self.custom_server[1],info_req=True)
+            info = connect(ip,self.custom_server[1],info_req=True)
+            if info.__class__ == tuple:
+                self.status.set(info[0])
+                self.window.event_generate('<<EnableUI>>')
+                return
             if not info['public']: PasswordPopUp(self.window,(self.run,self.custom_server))
             else: self.run(self.custom_server)
         else:
