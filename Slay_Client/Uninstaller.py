@@ -10,23 +10,17 @@ try:
 except Exception:
     pass
 
-REG_PATH = 'SOFTWARE\Microsoft\Windows\CurrentVersion\\Uninstall'
-KNOWN_FAILS = ['C:\\Program Files (x86)\\Slay\\python310.dll','C:\\Program Files (x86)\\Slay\\uninstall.exe','C:\\Program Files (x86)\\Slay\\VCRUNTIME140.dll','C:\\Program Files (x86)\\Slay\\_bz2.pyd','C:\\Program Files (x86)\\Slay\\_lzma.pyd','C:\\Program Files (x86)\\Slay']
-
-installPath =  os.environ["ProgramFiles(x86)"] + r'\Slay'
+installPath = __file__[:-15]
 shortcutPath = os.environ["USERPROFILE"] + r'\Desktop\Slay.lnk'
+
+REG_PATH = 'SOFTWARE\Microsoft\Windows\CurrentVersion\\Uninstall'
+KNOWN_FAILS = [installPath+'\\python310.dll',installPath+'\\uninstall.exe',installPath+'\\VCRUNTIME140.dll',installPath+'\\_bz2.pyd',installPath+'\\_lzma.pyd',installPath]
 
 print('DO NOT CLOSE THIS WINDOW')
 
 def ErrorHandler(func,path,err):
     if path in KNOWN_FAILS: return
     print(f'WARN: Error raised by {func} removing {path}, {err}\nContinuing...')
-
-if os.path.exists(installPath):
-    print('Program installation found! Removing...')
-    shutil.rmtree(installPath,onerror=ErrorHandler)
-else:
-    print('WARNING: Program installation not found!, No files were removed.')
 
 if os.path.exists(shortcutPath): 
     print('Desktop Shortcut found! Removing...')
@@ -41,5 +35,14 @@ try:
             print('Registry Entries removed')
 except WindowsError as err:
     print('Error Erasing Registry entries:',err)
+
+if os.path.exists(installPath):
+    try:
+        print('Program installation found! Removing...')
+        shutil.rmtree(installPath,onerror=ErrorHandler)
+    except Exception as err:
+        print(err)
+else:
+    print('WARNING: Program installation not found!, No files were removed.')
 
 if not auto_flag: _ = input('Process complete successfully, press Enter to finish...')
