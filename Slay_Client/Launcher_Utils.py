@@ -250,20 +250,21 @@ class MainWindow:
         try: del self.connection_window
         except (Exception) as err: pass
 
-        try:
-            ip = gethostbyname(self.custom_server[0])
-            print(ip)
-        except (Exception):
-            print('gaierror')
-            self.status.set('Error resolving address,\ntry again if the issue \npersists,you have the wrong \naddress')
-            self.status_label.configure(foreground='red')
-            self.window.event_generate('<<EnableUI>>')
-            return
-
         if custom:
+            try:
+                ip = gethostbyname(self.custom_server[0])
+                print(ip)
+            except (Exception):
+                print('gaierror')
+                self.status.set('Error resolving address,\ntry again if the issue \npersists,you have the wrong \naddress')
+                self.status_label.configure(foreground='red')
+                self.window.event_generate('<<EnableUI>>')
+                return
+
             info = connect(ip,self.custom_server[1],info_req=True)
             if info.__class__ == tuple:
                 self.status.set(info[0])
+                self.status_label.configure(foreground='red')
                 self.window.event_generate('<<EnableUI>>')
                 return
             if not info['public']: PasswordPopUp(self.window,(self.run,self.custom_server))
@@ -567,8 +568,12 @@ class CreditsWindow:
         self.window.destroy()
 
 class integratedServerWindow:
-    def __init__(self,mainWindow: Toplevel,executor,runCallback) -> None:
 
+    MINIMUM_SIZES = [None,None,9,9,24,49,90,144]
+    MIN_SIZE = 4
+
+    def __init__(self,mainWindow: Toplevel,executor,runCallback) -> None:
+        
         self.mainWindow = mainWindow
         self.executor = executor
         self.runCallback = runCallback
@@ -613,11 +618,11 @@ class integratedServerWindow:
         ttk.Label(self.gameFrame,text='Game Settings:',font=('default',12),padding='0 0 0 12').grid(column=1,row=1,sticky=(S,W))
 
         ttk.Label(self.gameFrame,text='Map Size (X):',padding='0 0 0 4').grid(column=1,row=2,sticky=(S,E))
-        self.XSlider = Scale(self.gameFrame, from_=1, to=20, orient=HORIZONTAL,variable=self.settings['XSIZE'])
+        self.XSlider = Scale(self.gameFrame, from_=5, to=20, orient=HORIZONTAL,variable=self.settings['XSIZE'],command=self.SizeUpdate)
         self.XSlider.grid(column=2,row=2,sticky=(S,W))
 
         ttk.Label(self.gameFrame,text='Map Size (Y):',padding='0 0 0 4').grid(column=1,row=3,sticky=(S,E))
-        self.YSlider = Scale(self.gameFrame, from_=1, to=20, orient=HORIZONTAL,variable=self.settings['YSIZE'])
+        self.YSlider = Scale(self.gameFrame, from_=5, to=20, orient=HORIZONTAL,variable=self.settings['YSIZE'],command=self.SizeUpdate)
         self.YSlider.grid(column=2,row=3,sticky=(S,W))
 
         ttk.Label(self.gameFrame,text='No. Of Players:',padding='0 0 0 4').grid(column=1,row=4,sticky=(S,E))
@@ -628,16 +633,19 @@ class integratedServerWindow:
         self.BotSlider = Scale(self.gameFrame, from_=0, to=7, orient=HORIZONTAL,variable=self.settings['BOTS'])
         self.BotSlider.grid(column=2,row=5,sticky=(S,W))
 
-        self.playersSliderUpdate()
-
         self.buttonFrame = ttk.Frame(self.mainframe,padding="12 12 12 12",borderwidth=1)
         self.buttonFrame.grid(column=1,row=4,columnspan=2,padx=(10,10),pady=(10,10),sticky=(N))
+        
+        self.statusTextVar = StringVar(self.buttonFrame,value='')
+        self.statusText = ttk.Label(self.buttonFrame,textvariable=self.statusTextVar,padding='0 0 0 4',foreground='red')
+        self.statusText.grid(column=1,row=1,columnspan=2,sticky=(N))
 
-        connectButton = ttk.Button(self.buttonFrame, text="Start & Join", command=self.confirmPress, padding='0 2 0 2',width=30)
-        connectButton.grid(column=1, row=1,sticky=(N,E))
-        cancelButton = ttk.Button(self.buttonFrame, text="Cancel", command=self.windowClosed, padding='0 2 0 2',width=30)
-        cancelButton.grid(column=2, row=1,sticky=(N,W))
+        self.connectButton = ttk.Button(self.buttonFrame, text="Start & Join", command=self.confirmPress, padding='0 2 0 2',width=30)
+        self.connectButton.grid(column=1, row=2,sticky=(N,E))
+        self.cancelButton = ttk.Button(self.buttonFrame, text="Cancel", command=self.windowClosed, padding='0 2 0 2',width=30)
+        self.cancelButton.grid(column=2, row=2,sticky=(N,W))
 
+        self.playersSliderUpdate()
         self.window.mainloop()
 
     def discoveryToggle(self) -> None:
@@ -648,6 +656,17 @@ class integratedServerWindow:
             self.settings['BOTS'].set(self.settings['MAX_COLOR'].get() - 1)
         
         self.BotSlider.configure(to=self.settings['MAX_COLOR'].get()-1)
+
+        self.SizeUpdate()
+
+    def SizeUpdate(self,e=None) -> None:
+        print('called',self.settings['XSIZE'].get() * self.settings['YSIZE'].get(),self.MINIMUM_SIZES[self.settings['MAX_COLOR'].get()])
+        if self.settings['XSIZE'].get() * self.settings['YSIZE'].get() < self.MINIMUM_SIZES[self.settings['MAX_COLOR'].get()]:
+            self.statusTextVar.set(f'Map Size too small(<{self.MINIMUM_SIZES[self.settings["MAX_COLOR"].get()]}), increase to start')
+            self.connectButton.configure(state='disabled')
+        else:
+            self.statusTextVar.set(f'')
+            self.connectButton.configure(state='enabled')
 
     def windowClosed(self) -> None:
         self.saveSettings()

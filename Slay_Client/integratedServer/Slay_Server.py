@@ -35,7 +35,8 @@ def main():
     reset_sockets()
 
     # Prepare for game
-    serverside_grid = createGrid()
+    try: serverside_grid = createGrid()
+    except Exception: return
     turn = 0 # Corresponds to index in connections list of player whose turn it is. May or may not match with client-side variable turn, depending on how many players have lost
     activePlayers = [item for item in range(1, MAX_COLOR+1)] # List with color no of every active player
 

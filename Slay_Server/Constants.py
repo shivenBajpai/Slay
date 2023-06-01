@@ -9,8 +9,8 @@ if not os.path.exists('./config.ini'):
 # Port on which server listens, ports 0-1023 are privileged and may require elevated access
 Port = 4444
 
-# Map size in number of cells, too many the window might be too big
-# Also larger maps take much longer to generate
+# Map size in number of cells, minimum 5 on each axis
+# Reccomended atleast 1.6*Number of players for fast map creation. 2*Number of players if more than 5 players
 MapXSize = 15
 MapYSize = 15
 
@@ -44,8 +44,14 @@ IP = 0.0.0.0'''
 try:
     config.read('config.ini')
     PORT = int(config['BASIC']['Port'])
-    XSIZE = int(config['BASIC']['MapXSize'])
-    YSIZE = int(config['BASIC']['MapYSize'])
+    XSIZE = int(config['BASIC']['MapXSize'])+1
+    if XSIZE+1 < 3: 
+        print('Map X Size must be atleast 3. Overriding')
+        XSIZE = 5
+    YSIZE = int(config['BASIC']['MapYSize'])+1
+    if YSIZE+1 < 3: 
+        print('Map Y Size must be atleast 3. Overriding')
+        YSIZE = 5
     MAX_COLOR = int(config['BASIC']['NumberOfPlayers'])
     BOTS = int(config['BASIC']['NumberOfBots'])
     if BOTS >= MAX_COLOR: raise Exception('Too many bots!')

@@ -466,7 +466,7 @@ def moveHall(grid,old_pos,affected_cells,queued_security_updates):
             break
         else: tmp.remove(rng)
 
-        if len(tmp) == 1: 
+        if len(tmp) == 0: 
             for cell in land:
                 grid[cell[0]][cell[1]].hall_loc = None
                 if grid[cell[0]][cell[1]].entity > CITY: 
@@ -524,7 +524,7 @@ def createCity(land,grid,affected_cells,queued_security_updates):
 
         else: tmp.remove(rng)
 
-        if len(tmp) < 2: 
+        if len(tmp) == 0: 
             for cell in land:
                 grid[cell[0]][cell[1]].hall_loc = None
                 if grid[cell[0]][cell[1]].entity > CITY: 
