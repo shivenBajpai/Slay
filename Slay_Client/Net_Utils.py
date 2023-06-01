@@ -17,18 +17,14 @@ def fast_recieve_message(socket,debug=True):
     msg = pickle.loads(socket.recv(msglen))
     return msg
     
-# TODO: Remove this
 def recieve_message(socket,debug=True):
     total_size = int(socket.recv(HEADERSIZE))
-    if debug: print('Length Expected:',total_size)
     msg = b''
     while len(msg)!=total_size:
         remaining = total_size - len(msg)
-        print('Remaining:',remaining, 'size',len(msg), 'sum',remaining+len(msg))
         if remaining > 128: size = 128
         else: size = remaining
         msg = msg + socket.recv(size)
-    print('Length recieved:',len(msg))
     return pickle.loads(msg)
 
 class Packet:
