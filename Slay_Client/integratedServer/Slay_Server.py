@@ -55,8 +55,6 @@ def main():
                     conn, addr = server_socket.accept()
                     print('connection from:',addr)
                     pack = recieve_message(conn)
-                    print(pack)
-                    print(pack.__class__)
                     conn.settimeout(0.1)
                     if pack.__class__ != Net_Utils.Packet: 
                         print('illegal, bounced')

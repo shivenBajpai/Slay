@@ -660,7 +660,6 @@ class integratedServerWindow:
         self.SizeUpdate()
 
     def SizeUpdate(self,e=None) -> None:
-        print('called',self.settings['XSIZE'].get() * self.settings['YSIZE'].get(),self.MINIMUM_SIZES[self.settings['MAX_COLOR'].get()])
         if self.settings['XSIZE'].get() * self.settings['YSIZE'].get() < self.MINIMUM_SIZES[self.settings['MAX_COLOR'].get()]:
             self.statusTextVar.set(f'Map Size too small(<{self.MINIMUM_SIZES[self.settings["MAX_COLOR"].get()]}), increase to start')
             self.connectButton.configure(state='disabled')
