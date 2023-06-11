@@ -5,7 +5,8 @@ import winreg
 REG_PATH = 'SOFTWARE\Microsoft\Windows\CurrentVersion\\Uninstall'
 
 installPath =  os.environ["ProgramFiles(x86)"] + r'\Slay Server'
-shortcutPath = os.environ["USERPROFILE"] + r'\Desktop\Slay Server.lnk'
+desktopShortcutPath = os.environ["USERPROFILE"] + r'\Desktop\Slay Server.lnk'
+startShortcutPath = os.environ["APPDATA"] + '\\Microsoft\\Windows\\Start Menu\\Programs\\Slay_Server.lnk'
 
 print('DO NOT CLOSE THIS WINDOW')
 
@@ -18,11 +19,17 @@ if os.path.exists(installPath):
 else:
     print('WARNING: Program installation not found!, No files were removed.')
 
-if os.path.exists(shortcutPath): 
+if os.path.exists(desktopShortcutPath): 
     print('Desktop Shortcut found! Removing...')
-    os.remove(shortcutPath)
+    os.remove(desktopShortcutPath)
 else:
     print('Desktop Shortcut not found! Skipping...')
+
+if os.path.exists(startShortcutPath): 
+    print('Start Menu Shortcut found! Removing...')
+    os.remove(startShortcutPath)
+else:
+    print('Start Menu Shortcut not found! Skipping...')
 
 try:
     with winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, REG_PATH, 0, winreg.KEY_WRITE) as registry_key:

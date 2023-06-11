@@ -1,5 +1,6 @@
 from tkinter import *
 from tkinter import ttk
+from time import sleep
 import os
 import Slay
 import Replayer
@@ -233,7 +234,7 @@ class MainWindow:
         
     def ServerButtonPress(self) -> None:
         self.window.event_generate('<<DisableUI>>')
-        integratedServerWindow(self.window,self.executor,self.run)
+        integratedServerWindow(self.window,self.executor,self.run,(self.status,self.status_label))
 
     def ReplayButtonPress(self) -> None:
         self.window.event_generate('<<DisableUI>>')
@@ -569,14 +570,15 @@ class CreditsWindow:
 
 class integratedServerWindow:
 
-    MINIMUM_SIZES = [None,None,9,9,24,49,90,144]
+    MINIMUM_SIZES = [None,None,9,9,24,49,90,144,256,361,484]
     MIN_SIZE = 4
 
-    def __init__(self,mainWindow: Toplevel,executor,runCallback) -> None:
+    def __init__(self,mainWindow: Toplevel,executor,runCallback,status_label) -> None:
         
         self.mainWindow = mainWindow
         self.executor = executor
         self.runCallback = runCallback
+        self.mainWindowStatusLabel = status_label
         self.window = Toplevel(mainWindow)
         self.window.title('Slay - Start Local Game')
         self.window.iconbitmap('icon.ico')
@@ -618,19 +620,19 @@ class integratedServerWindow:
         ttk.Label(self.gameFrame,text='Game Settings:',font=('default',12),padding='0 0 0 12').grid(column=1,row=1,sticky=(S,W))
 
         ttk.Label(self.gameFrame,text='Map Size (X):',padding='0 0 0 4').grid(column=1,row=2,sticky=(S,E))
-        self.XSlider = Scale(self.gameFrame, from_=5, to=20, orient=HORIZONTAL,variable=self.settings['XSIZE'],command=self.SizeUpdate)
+        self.XSlider = Scale(self.gameFrame, from_=5, to=25, orient=HORIZONTAL,variable=self.settings['XSIZE'],command=self.SizeUpdate)
         self.XSlider.grid(column=2,row=2,sticky=(S,W))
 
         ttk.Label(self.gameFrame,text='Map Size (Y):',padding='0 0 0 4').grid(column=1,row=3,sticky=(S,E))
-        self.YSlider = Scale(self.gameFrame, from_=5, to=20, orient=HORIZONTAL,variable=self.settings['YSIZE'],command=self.SizeUpdate)
+        self.YSlider = Scale(self.gameFrame, from_=5, to=25, orient=HORIZONTAL,variable=self.settings['YSIZE'],command=self.SizeUpdate)
         self.YSlider.grid(column=2,row=3,sticky=(S,W))
 
         ttk.Label(self.gameFrame,text='No. Of Players:',padding='0 0 0 4').grid(column=1,row=4,sticky=(S,E))
-        self.PlayerSlider = Scale(self.gameFrame, from_=2, to=7, orient=HORIZONTAL,variable=self.settings['MAX_COLOR'],command=self.playersSliderUpdate)
+        self.PlayerSlider = Scale(self.gameFrame, from_=2, to=10, orient=HORIZONTAL,variable=self.settings['MAX_COLOR'],command=self.playersSliderUpdate)
         self.PlayerSlider.grid(column=2,row=4,sticky=(S,W))
 
         ttk.Label(self.gameFrame,text='No. Of Bots:',padding='0 0 0 4').grid(column=1,row=5,sticky=(S,E))
-        self.BotSlider = Scale(self.gameFrame, from_=0, to=7, orient=HORIZONTAL,variable=self.settings['BOTS'])
+        self.BotSlider = Scale(self.gameFrame, from_=0, to=10, orient=HORIZONTAL,variable=self.settings['BOTS'])
         self.BotSlider.grid(column=2,row=5,sticky=(S,W))
 
         self.buttonFrame = ttk.Frame(self.mainframe,padding="12 12 12 12",borderwidth=1)
@@ -681,6 +683,10 @@ class integratedServerWindow:
         importlib.reload(integratedServer.Hex_Utils)
         importlib.reload(integratedServer.Slay_Server)
         self.executor.submit(integratedServer.Slay_Server.main)
+        self.mainWindowStatusLabel[0].set('Waiting for server to start...')
+        self.mainWindowStatusLabel[1].configure(foreground='red')
+        self.mainWindow.event_generate('<<DisableUI>>')
+        sleep(0.5*self.settings["MAX_COLOR"].get())
         self.runCallback(('localhost',int(self.settings['PORT'].get())),self.settings['PASSWORD'].get())
 
     def loadSettings(self) -> None:

@@ -75,7 +75,7 @@ def main(filename,currentconfig):
             if beat == 20: beat = 0 #beat loops from 0 to 19
 
             # handle events
-            for event in pygame.event.get(): handleReplayEvent(event,moves,setDebugPos)
+            for event in pygame.event.get(): handleReplayEvent(event,moves,setDebugPos,WINDOWX,WINDOWY)
 
             try:
                 # check if we have ended

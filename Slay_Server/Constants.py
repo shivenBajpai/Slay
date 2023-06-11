@@ -3,6 +3,20 @@ import os
 
 config = configparser.ConfigParser()
 
+COLOR_MAPPING = ['Blue','Yellow','Pink','Green','Lime','Violet','Turqoise','Orange','Red','Brown']
+NONE = 0
+TREE = 1
+PALM = 2
+GRAVE = 3
+TOWER = 4
+CITY = 5
+MAN = 6
+SPEARMAN = 7
+BARON = 8
+KNIGHT = 9
+CITY_SECURITY = 1
+TOWER_SECURITY = 2
+
 if not os.path.exists('./config.ini'):
     print('Config file missing!, Generating default config file')
     DEFAULTCONFIG = '''[BASIC]
@@ -53,6 +67,7 @@ try:
         print('Map Y Size must be atleast 3. Overriding')
         YSIZE = 5
     MAX_COLOR = int(config['BASIC']['NumberOfPlayers'])
+    if MAX_COLOR > len(COLOR_MAPPING): raise Exception('Too many players! Max 10')
     BOTS = int(config['BASIC']['NumberOfBots'])
     if BOTS >= MAX_COLOR: raise Exception('Too many bots!')
     AUTOREBOOT = config['BASIC']['AutoReboot'] == 'True'
@@ -65,17 +80,3 @@ except (Exception) as err:
     print('Error Parsing config:')
     print(err)
     raise SystemExit()
-
-COLOR_MAPPING = ['Blue','Yellow','Pink','Green','Cyan','Lime','Violet']
-NONE = 0
-TREE = 1
-PALM = 2
-GRAVE = 3
-TOWER = 4
-CITY = 5
-MAN = 6
-SPEARMAN = 7
-BARON = 8
-KNIGHT = 9
-CITY_SECURITY = 1
-TOWER_SECURITY = 2

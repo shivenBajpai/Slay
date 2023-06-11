@@ -6,7 +6,7 @@ There are some key differences:
 
 - Maps are randomly generated instead of preset and can be as large as you like**
 - Units have fixed travel distance (2 cells)
-- Theoretically infinite max players, but only upto 7 right now because i cant decide on good colors
+- Upto 10 players
 - New Graphics and Sounds
 - Game Replays are available
 
@@ -25,5 +25,5 @@ If you wish to build the code locally, The included build scripts in both Client
 Also included is the installer build script based on WinRAR's CLI mode That was used to generate the sfx installer executable
 Code was built using python ver 3.10.6
 
-\*Requires Port Forwarding to connect to servers outside your local network<br>
-\*\*At a certain point youll run out of screen space but if you have a widescreen, go ham.
+\*Requires Port Forwarding or something to the same effect to connect to servers outside your local network<br>
+\*\*At a certain point youll be limited by screen space and also map generation will take significantly longer

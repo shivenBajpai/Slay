@@ -31,7 +31,7 @@ class Replay:
             self.file = open(f"replays\\{self.name}.bin", "xb")
 
     def readNext(self):
-        if not self.reading: raise Exception('Trying to read from a incomplete replay')
+        if not self.reading: raise Exception('Trying to read from an incomplete replay')
         return next(self.generator)
     
     def writeNext(self,pack):

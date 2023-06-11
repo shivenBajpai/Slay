@@ -10,12 +10,16 @@ end_button_rect = None
 
 def reset_renderer(WINDOWX,WINDOWY):
     global roboto, roboto_heading, end_button_rect, debug
-    end_button_rect = pygame.Rect((WINDOWX + 33,WINDOWY-50),(134,33))
+    end_button_rect = pygame.Rect((WINDOWX + 33,WINDOWY-50),(134,33)) # This windowX , windowY corresponds to grid area
     if not pygame.font.get_init(): pygame.font.init()
     roboto_heading = pygame.font.Font('./Slay_Assets/RobotoMono-VariableFont_wght.ttf',15)
     roboto_heading.set_bold(True)
     roboto = pygame.font.Font('./Slay_Assets/RobotoMono-VariableFont_wght.ttf',13)
     debug = pygame.font.Font('./Slay_Assets/RobotoMono-VariableFont_wght.ttf',10)
+
+def resize(WINDOWX,WINDOWY):
+    global end_button_rect
+    end_button_rect = pygame.Rect((WINDOWX + 33 - 200,WINDOWY-50),(134,33)) # This windowX , windowY corresponds to the actual window
 
 # Gives X position to center text ON SIDERBAR
 def center(text,font):
@@ -29,45 +33,45 @@ def drawBaseLayer(screen :pygame.Surface,WINDOWX,WINDOWY):
 
 def drawShopWindow(screen,WINDOWX,gold):
 
-    screen.blit(roboto_heading.render('BUY',True,(0,0,0)),(WINDOWX+center('BUY',roboto_heading),55))
-    height = 55
+    screen.blit(roboto_heading.render('BUY',True,(0,0,0)),(WINDOWX+center('BUY',roboto_heading),85))
+    height = 85
 
     if gold < 10:
-        screen.blit(roboto.render('Cannot Afford Anything',True,(0,0,0)),(WINDOWX+center('Cannot Afford Anything',roboto),80))
+        screen.blit(roboto.render('Cannot Afford Anything',True,(0,0,0)),(WINDOWX+center('Cannot Afford Anything',roboto),110))
         return height + 5
 
 
-    screen.blit(roboto.render('Cost',True,(0,0,0)),(WINDOWX+85,80))
-    screen.blit(roboto.render('Wage',True,(0,0,0)),(WINDOWX+135,80))
+    screen.blit(roboto.render('Cost',True,(0,0,0)),(WINDOWX+85,110))
+    screen.blit(roboto.render('Wage',True,(0,0,0)),(WINDOWX+135,110))
 
     if gold >= 10:
-        screen.blit(entities[MAN],(WINDOWX+23,95))
-        screen.blit(roboto.render('10',True,(0,0,0)),(WINDOWX+90,110))
-        screen.blit(roboto.render('2',True,(0,0,0)),(WINDOWX+140,110))
+        screen.blit(entities[MAN],(WINDOWX+23,125))
+        screen.blit(roboto.render('10',True,(0,0,0)),(WINDOWX+90,140))
+        screen.blit(roboto.render('2',True,(0,0,0)),(WINDOWX+140,140))
         height += 40
 
     if gold >= 15:
-        screen.blit(entities[TOWER],(WINDOWX+23,135))
-        screen.blit(roboto.render('15',True,(0,0,0)),(WINDOWX+90,150))
-        screen.blit(roboto.render('-',True,(0,0,0)),(WINDOWX+140,150))
+        screen.blit(entities[TOWER],(WINDOWX+23,165))
+        screen.blit(roboto.render('15',True,(0,0,0)),(WINDOWX+90,180))
+        screen.blit(roboto.render('-',True,(0,0,0)),(WINDOWX+140,180))
         height += 40
 
     if gold >= 20:
-        screen.blit(entities[SPEARMAN],(WINDOWX+23,175))
-        screen.blit(roboto.render('20',True,(0,0,0)),(WINDOWX+90,190))
-        screen.blit(roboto.render('6',True,(0,0,0)),(WINDOWX+140,190))
+        screen.blit(entities[SPEARMAN],(WINDOWX+23,205))
+        screen.blit(roboto.render('20',True,(0,0,0)),(WINDOWX+90,220))
+        screen.blit(roboto.render('6',True,(0,0,0)),(WINDOWX+140,220))
         height += 40
     
     if gold >= 30:
-        screen.blit(entities[BARON],(WINDOWX+23,215))
-        screen.blit(roboto.render('30',True,(0,0,0)),(WINDOWX+90,230))
-        screen.blit(roboto.render('18',True,(0,0,0)),(WINDOWX+140,230))
+        screen.blit(entities[BARON],(WINDOWX+23,245))
+        screen.blit(roboto.render('30',True,(0,0,0)),(WINDOWX+90,260))
+        screen.blit(roboto.render('18',True,(0,0,0)),(WINDOWX+140,260))
         height += 40
 
     if gold >= 40:
-        screen.blit(entities[KNIGHT],(WINDOWX+23,255))
-        screen.blit(roboto.render('40',True,(0,0,0)),(WINDOWX+90,270))
-        screen.blit(roboto.render('36',True,(0,0,0)),(WINDOWX+140,270))
+        screen.blit(entities[KNIGHT],(WINDOWX+23,285))
+        screen.blit(roboto.render('40',True,(0,0,0)),(WINDOWX+90,300))
+        screen.blit(roboto.render('36',True,(0,0,0)),(WINDOWX+140,300))
         height += 40
 
     return height
@@ -84,14 +88,17 @@ def drawSideBar(screen :pygame.Surface,grid,selected,WINDOWX,WINDOWY,color):
 
     global end_button_rect
 
-    #Status line
+    #Status lines
+
+    screen.blit(roboto_heading.render(f'You are {NAME_MAPPING[color-1]}',True,COLOR_MAPPING[color-1]),(WINDOWX+center(f'You are {NAME_MAPPING[color-1]}',roboto_heading),15))
+
     if is_our_turn():
-        screen.blit(roboto_heading.render('Your turn',True,COLOR_MAPPING[color-1]),(WINDOWX+center('Your turn',roboto_heading),15))
+        screen.blit(roboto_heading.render('Your turn',True,COLOR_MAPPING[color-1]),(WINDOWX+center('Your turn',roboto_heading),45))
     else:
         turn = get_turn()
-        screen.blit(roboto_heading.render(f'{NAME_MAPPING[turn-1]}\'s turn',True,COLOR_MAPPING[turn-1]),(WINDOWX+center(f'{NAME_MAPPING[turn-1]}\'s turn',roboto_heading),15))
+        screen.blit(roboto_heading.render(f'{NAME_MAPPING[turn-1]}\'s turn',True,COLOR_MAPPING[turn-1]),(WINDOWX+center(f'{NAME_MAPPING[turn-1]}\'s turn',roboto_heading),45))
 
-    screen.fill((0,0,0),pygame.Rect(WINDOWX+20,45,160,2))
+    screen.fill((0,0,0),pygame.Rect(WINDOWX+20,75,160,2))
 
     #End Turn button
     if is_our_turn():
@@ -99,12 +106,10 @@ def drawSideBar(screen :pygame.Surface,grid,selected,WINDOWX,WINDOWY,color):
         else: screen.blit(buttons[0][0],(WINDOWX + 33,WINDOWY-50))
     else:
         screen.blit(buttons[0][2],(WINDOWX + 33,WINDOWY-50))
-        
-
 
     #Shop window and finances
     if selected is None:
-        screen.blit(roboto_heading.render('No State Selected',True,(0,0,0)),(WINDOWX+center('No State Selected',roboto_heading),60))
+        screen.blit(roboto_heading.render('No State Selected',True,(0,0,0)),(WINDOWX+center('No State Selected',roboto_heading),90))
         return
 
     offset = drawShopWindow(screen,WINDOWX,grid[selected[0]][selected[1]].gold)
@@ -112,11 +117,18 @@ def drawSideBar(screen :pygame.Surface,grid,selected,WINDOWX,WINDOWY,color):
     screen.fill((0,0,0),pygame.Rect(WINDOWX+20,offset+45,160,2)) 
     screen.blit(roboto_heading.render('Finances',True,(0,0,0)),(WINDOWX+center('Finances',roboto_heading),offset+60))
 
-    screen.blit(roboto.render(f'Savings{grid[selected[0]][selected[1]].gold:>12}',True,(0,0,0)),(WINDOWX+25,offset+80))
+    screen.blit(roboto.render(f'Current Balance{grid[selected[0]][selected[1]].gold:>4}',True,(0,0,0)),(WINDOWX+25,offset+80))
     screen.blit(roboto.render(f'Wages{("-"+str(grid[selected[0]][selected[1]].wages)):>14}',True,(0,0,0)),(WINDOWX+25,offset+100))
     screen.blit(roboto.render(f'Income{("+"+str(grid[selected[0]][selected[1]].income)):>13}',True,(0,0,0)),(WINDOWX+25,offset+120))
     screen.fill((0,0,0),pygame.Rect(WINDOWX+20,offset+140,160,1))
-    screen.blit(roboto.render(f'Net{grid[selected[0]][selected[1]].net:>16}',True,(0,0,0)),(WINDOWX+25,offset+155))
+    screen.blit(roboto.render(f'Next Turn{grid[selected[0]][selected[1]].net:>10}',True,((0,0,0) if grid[selected[0]][selected[1]].net>=0 else (154,46,46))),(WINDOWX+25,offset+155))
+
+    '''screen.blit(roboto.render(f'Current Balance{grid[selected[0]][selected[1]].gold:>4}',True,(0,0,0)),(WINDOWX+25,offset+85))
+    screen.fill((0,0,0),pygame.Rect(WINDOWX+20,offset+109,160,1))
+    screen.blit(roboto.render(f'Wages{("-"+str(grid[selected[0]][selected[1]].wages)):>14}',True,(0,0,0)),(WINDOWX+25,offset+115))
+    screen.blit(roboto.render(f'Income{("+"+str(grid[selected[0]][selected[1]].income)):>13}',True,(0,0,0)),(WINDOWX+25,offset+135))
+    screen.fill((0,0,0),pygame.Rect(WINDOWX+20,offset+159,160,1))
+    screen.blit(roboto.render(f'Next Turn{grid[selected[0]][selected[1]].net:>10}',True,((0,0,0) if grid[selected[0]][selected[1]].net>=0 else (154,46,46))),(WINDOWX+25,offset+165))'''
     return
 
 def drawMapLayer(screen :pygame.Surface, grid, blink: bool, renderSelections: bool = True):

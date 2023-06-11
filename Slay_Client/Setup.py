@@ -1,4 +1,5 @@
 import winreg
+from pycrosskit.shortcuts import Shortcut
 import os
 
 UninstallString =  os.getcwd() + '\\uninstall.exe'
@@ -31,5 +32,12 @@ print(f'Writing ExeName: {set_key("ExeName",ExeName,winreg.REG_SZ)}')
 print(f'Writing EstimatedSize: {set_key("EstimatedSize",EstimatedSize,winreg.REG_DWORD)}')
 print(f'Writing displayVersion: {set_key("displayVersion",displayVersion,winreg.REG_SZ)}')
 print(f'Writing displayName: {set_key("displayName",displayName,winreg.REG_SZ)}')
+
+try:
+    Shortcut(shortcut_name="Slay", exec_path=displayIcon, description="Slay",
+            icon_path=displayIcon, work_dir=InstallPath, desktop=True, start_menu=True)
+    print('Creating Shortcuts: SUCCESS')
+except Exception as err:
+    print('Creating Shortcuts: FAILED', err)
 
 _ = input('Installation successful, press Enter to finish...')

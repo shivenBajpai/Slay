@@ -1,9 +1,10 @@
 from TextureLoader import entities
-from pygame.locals import QUIT, MOUSEMOTION, MOUSEBUTTONDOWN, MOUSEBUTTONUP
+from pygame.locals import QUIT, MOUSEMOTION, MOUSEBUTTONDOWN, MOUSEBUTTONUP, VIDEORESIZE
 from pygame import Rect, mouse
 from Constants import *
 from Hex_Utils import *
 from Networking import declareExit,is_our_turn
+from Renderer import resize
 import Sound_Utils
 import math
 import copy
@@ -29,11 +30,11 @@ def reset_move_utils(WINDOWX,WINDOWY):
     pick_up_pos = None
     selected_city = None
     shop_button_rects = (
-        (Rect((WINDOWX+23,95),(48,48)),10,MAN),
-        (Rect((WINDOWX+23,135),(48,48)),15,TOWER),
-        (Rect((WINDOWX+23,175),(48,48)),20,SPEARMAN),
-        (Rect((WINDOWX+23,215),(48,48)),30,BARON),
-        (Rect((WINDOWX+23,255),(48,48)),40,KNIGHT)
+        (Rect((WINDOWX+23,125),(48,48)),10,MAN),
+        (Rect((WINDOWX+23,165),(48,48)),15,TOWER),
+        (Rect((WINDOWX+23,205),(48,48)),20,SPEARMAN),
+        (Rect((WINDOWX+23,245),(48,48)),30,BARON),
+        (Rect((WINDOWX+23,285),(48,48)),40,KNIGHT)
     ) # (Bounding Box, Cost, Entity)
     end_button_rect = Rect((WINDOWX + 33,WINDOWY-50),(134,33))
     next_button_rect = Rect((WINDOWX + 33,WINDOWY-50),(134,33))
@@ -61,9 +62,25 @@ def getpoints(a,b,n):
         ))
     return points
 
-def handleReplayEvent(event,moves,SetDebugPos):
-    global mouse_pos, mouse_on_grid
+def handleReplayEvent(event,moves,SetDebugPos,XMIN,YMIN):
+    global mouse_pos, mouse_on_grid, end_button_rect, next_button_rect, shop_button_rects
     if event.type == QUIT: raise Exception('User Exited Replay')
+
+    if event.type == VIDEORESIZE: 
+        new_size = [event.dict['size'][0],event.dict['size'][1]]
+        if new_size[0] < XMIN+200: new_size[0]=XMIN+200
+        if new_size[1] < YMIN: new_size[1]=YMIN
+        pygame.display.set_mode(new_size, flags= pygame.RESIZABLE)
+        end_button_rect = Rect((new_size[0] + 33 - 200,new_size[1]-50),(134,33))
+        next_button_rect = Rect((new_size[0] + 33 - 200,new_size[1]-50),(134,33))
+        shop_button_rects = (
+        (Rect((new_size[0]+23-200,125),(48,48)),10,MAN),
+        (Rect((new_size[0]+23-200,165),(48,48)),15,TOWER),
+        (Rect((new_size[0]+23-200,205),(48,48)),20,SPEARMAN),
+        (Rect((new_size[0]+23-200,245),(48,48)),30,BARON),
+        (Rect((new_size[0]+23-200,285),(48,48)),40,KNIGHT)
+        )
+        resize(new_size[0],new_size[1])
 
     elif event.type == MOUSEMOTION: mouse_pos, mouse_on_grid = cursor_on_grid(mouse_pos)
 
@@ -74,11 +91,27 @@ def handleReplayEvent(event,moves,SetDebugPos):
         if next_button_rect.collidepoint(mouse.get_pos()):
             moves.append('next')
 
-def handleEvent(event,grid,moves,color,SetDebugPos):
+def handleEvent(event,grid,moves,color,SetDebugPos,XMIN,YMIN):
 
-    global mouse_pos, mousedown, mouse_entity, valid_locations, pick_up_pos, selected_city, mouse_on_grid
+    global mouse_pos, mousedown, mouse_entity, valid_locations, pick_up_pos, selected_city, mouse_on_grid, end_button_rect, next_button_rect, shop_button_rects
 
     if event.type == QUIT: declareExit()
+
+    if event.type == VIDEORESIZE: 
+        new_size = [event.dict['size'][0],event.dict['size'][1]]
+        if new_size[0] < XMIN+200: new_size[0]=XMIN+200
+        if new_size[1] < YMIN: new_size[1]=YMIN
+        pygame.display.set_mode(new_size, flags= pygame.RESIZABLE)
+        end_button_rect = Rect((new_size[0] + 33-200,new_size[1]-50),(134,33))
+        next_button_rect = Rect((new_size[0] + 33-200,new_size[1]-50),(134,33))
+        shop_button_rects = (
+        (Rect((new_size[0]+23-200,125),(48,48)),10,MAN),
+        (Rect((new_size[0]+23-200,165),(48,48)),15,TOWER),  
+        (Rect((new_size[0]+23-200,205),(48,48)),20,SPEARMAN),
+        (Rect((new_size[0]+23-200,245),(48,48)),30,BARON),
+        (Rect((new_size[0]+23-200,285),(48,48)),40,KNIGHT)
+        )
+        resize(new_size[0],new_size[1])
 
     elif event.type == MOUSEMOTION: mouse_pos, mouse_on_grid = cursor_on_grid(mouse_pos)
 

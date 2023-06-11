@@ -60,7 +60,7 @@ except (Exception) as err:
     print(err)
     raise SystemExit()
 
-COLOR_MAPPING = ['Blue','Yellow','Pink','Green','Cyan','Lime','Violet']
+COLOR_MAPPING = ['Blue','Yellow','Pink','Green','Lime','Violet','Turqoise','Orange','Red','Brown']
 NONE = 0
 TREE = 1
 PALM = 2

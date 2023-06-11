@@ -18,8 +18,8 @@ cells.append([
     pygame.image.load('./Slay_Assets/yellow_selected.png').convert_alpha()
 ])
 cells.append([
-    pygame.image.load('./Slay_Assets/red.png').convert_alpha(),
-    pygame.image.load('./Slay_Assets/red_selected.png').convert_alpha()
+    pygame.image.load('./Slay_Assets/pink.png').convert_alpha(),
+    pygame.image.load('./Slay_Assets/pink_selected.png').convert_alpha()
 ])
 cells.append([
     pygame.image.load('./Slay_Assets/green.png').convert_alpha(),
@@ -36,6 +36,18 @@ cells.append([
 cells.append([
     pygame.image.load('./Slay_Assets/violet.png').convert_alpha(),
     pygame.image.load('./Slay_Assets/violet_selected.png').convert_alpha()
+])
+cells.append([
+    pygame.image.load('./Slay_Assets/orange.png').convert_alpha(),
+    pygame.image.load('./Slay_Assets/orange_selected.png').convert_alpha()
+])
+cells.append([
+    pygame.image.load('./Slay_Assets/red.png').convert_alpha(),
+    pygame.image.load('./Slay_Assets/red_selected.png').convert_alpha()
+])
+cells.append([
+    pygame.image.load('./Slay_Assets/brown.png').convert_alpha(),
+    pygame.image.load('./Slay_Assets/brown_selected.png').convert_alpha()
 ])
 
 #load entites
