@@ -62,15 +62,19 @@ def getpoints(a,b,n):
         ))
     return points
 
-def handleReplayEvent(event,moves,SetDebugPos,XMIN,YMIN):
+def handleReplayEvent(event,moves,SetDebugPos,XMIN,YMIN,DEBUG):
     global mouse_pos, mouse_on_grid, end_button_rect, next_button_rect, shop_button_rects
     if event.type == QUIT: raise Exception('User Exited Replay')
 
     if event.type == VIDEORESIZE: 
         new_size = [event.dict['size'][0],event.dict['size'][1]]
         if new_size[0] < XMIN+200: new_size[0]=XMIN+200
-        if new_size[1] < YMIN: new_size[1]=YMIN
+        if DEBUG:
+            if new_size[1] < YMIN+200: new_size[1]=YMIN+200
+        else:
+            if new_size[1] < YMIN: new_size[1]=YMIN
         pygame.display.set_mode(new_size, flags= pygame.RESIZABLE)
+        if DEBUG: new_size[1] -= 200
         end_button_rect = Rect((new_size[0] + 33 - 200,new_size[1]-50),(134,33))
         next_button_rect = Rect((new_size[0] + 33 - 200,new_size[1]-50),(134,33))
         shop_button_rects = (
@@ -91,7 +95,7 @@ def handleReplayEvent(event,moves,SetDebugPos,XMIN,YMIN):
         if next_button_rect.collidepoint(mouse.get_pos()):
             moves.append('next')
 
-def handleEvent(event,grid,moves,color,SetDebugPos,XMIN,YMIN):
+def handleEvent(event,grid,moves,color,SetDebugPos,XMIN,YMIN,DEBUG):
 
     global mouse_pos, mousedown, mouse_entity, valid_locations, pick_up_pos, selected_city, mouse_on_grid, end_button_rect, next_button_rect, shop_button_rects
 
@@ -100,8 +104,12 @@ def handleEvent(event,grid,moves,color,SetDebugPos,XMIN,YMIN):
     if event.type == VIDEORESIZE: 
         new_size = [event.dict['size'][0],event.dict['size'][1]]
         if new_size[0] < XMIN+200: new_size[0]=XMIN+200
-        if new_size[1] < YMIN: new_size[1]=YMIN
+        if DEBUG:
+            if new_size[1] < YMIN+200: new_size[1]=YMIN+200
+        else:
+            if new_size[1] < YMIN: new_size[1]=YMIN
         pygame.display.set_mode(new_size, flags= pygame.RESIZABLE)
+        if DEBUG: new_size[1] -= 200
         end_button_rect = Rect((new_size[0] + 33-200,new_size[1]-50),(134,33))
         next_button_rect = Rect((new_size[0] + 33-200,new_size[1]-50),(134,33))
         shop_button_rects = (

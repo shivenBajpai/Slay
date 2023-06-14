@@ -50,9 +50,8 @@ def main(color,config):
     WINDOWX = (config['XSIZE']+1)*48 + 32 
     WINDOWY = (config['YSIZE']+1)*36 + 24
     if WINDOWY<YMIN: WINDOWY = YMIN
-    if DEBUG: WINDOWY += 200
 
-    if DEBUG: screen = pygame.display.set_mode([WINDOWX+200, WINDOWY])
+    if DEBUG: screen = pygame.display.set_mode([WINDOWX+200, WINDOWY+200])
     else: screen = pygame.display.set_mode([WINDOWX+200, WINDOWY], flags=pygame.RESIZABLE)
     pygame.display.set_caption('Slay')
 
@@ -84,7 +83,7 @@ def main(color,config):
             if beat == 20: beat = 0 #beat loops from 0 to 19
 
             # handle events, includes logic
-            for event in pygame.event.get(): handleEvent(event,grid,moves,color,setDebugPos,WINDOWX,WINDOWY)
+            for event in pygame.event.get(): handleEvent(event,grid,moves,color,setDebugPos,WINDOWX,WINDOWY,DEBUG)
                 
             # talk to server
             network(moves,grid,animations,color,get_selected_city(),set_selected_city,replayFile)
@@ -93,9 +92,9 @@ def main(color,config):
             drawBaseLayer(screen,pygame.display.get_window_size()[0]-200,pygame.display.get_window_size()[1])
             drawMapLayer(screen, grid, floor(beat/2)%2==0)
             drawEntities(screen, grid, floor(beat/2)%2==0, color)
-            drawSideBar(screen, grid, get_selected_city(), pygame.display.get_window_size()[0]-200, pygame.display.get_window_size()[1], color)
+            drawSideBar(screen, grid, get_selected_city(), pygame.display.get_window_size()[0]-200, pygame.display.get_window_size()[1]-(200 if DEBUG else 0), color)
             drawMouseEntity(screen, get_mouse_entity(), pygame.mouse.get_pos())
-            if DEBUG: drawDebugger(screen,grid,debugPos,pygame.display.get_window_size()[1],pygame.display.get_window_size()[0]-200)
+            if DEBUG: drawDebugger(screen,grid,debugPos,pygame.display.get_window_size()[1]-200,pygame.display.get_window_size()[0]-200)
 
             for index, animation in enumerate(animations):
                 if animation.animation.animate(screen): 

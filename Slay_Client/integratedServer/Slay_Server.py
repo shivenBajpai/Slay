@@ -44,6 +44,7 @@ def main():
     class GameOver(Exception): ...
 
     connections = {}
+    connectionsAddrList = []
 
     print('Server listening on port', PORT)
     print(f'Server Discovery: {DISCOVERABLE}')
@@ -75,6 +76,7 @@ def main():
                         conn.close()
                         continue
                     connections[addr] = conn
+                    connectionsAddrList.append(addr)
                     send_message(conn,Packet(
                         Packet.ID,
                         {'id':len(connections),'config':{'XSIZE':XSIZE,'YSIZE':YSIZE}}    
@@ -154,7 +156,7 @@ def main():
 
                         elif pack.code == Packet.MOVE:
                             print(f'recieved move from {addr}')
-                            if list(connections.keys()).index(addr) == turn:
+                            if connectionsAddrList.index(addr) == turn:
                                 broadcast(connections,Packet(Packet.UPDATE,pack.data))
                                 broadcast(connections,Packet(Packet.PLAY,{'turn':turn+1}))
 
@@ -165,7 +167,7 @@ def main():
 
                         elif pack.code == Packet.END_TURN:
                             print(f'recieved turn end from {addr}')
-                            if list(connections.keys()).index(addr) == turn:
+                            if connectionsAddrList.index(addr) == turn:
 
                                 turn += 1
                                 print(f'new value of turn is {turn}')
