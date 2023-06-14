@@ -2,15 +2,17 @@ import os
 import shutil
 import winreg
 
-REG_PATH = 'SOFTWARE\Microsoft\Windows\CurrentVersion\\Uninstall'
-
 installPath =  os.environ["ProgramFiles(x86)"] + r'\Slay Server'
 desktopShortcutPath = os.environ["USERPROFILE"] + r'\Desktop\Slay Server.lnk'
 startShortcutPath = os.environ["APPDATA"] + '\\Microsoft\\Windows\\Start Menu\\Programs\\Slay_Server.lnk'
 
+REG_PATH = 'SOFTWARE\Microsoft\Windows\CurrentVersion\\Uninstall'
+KNOWN_FAILS = [installPath+'\\python310.dll',installPath+'\\uninstall.exe',installPath+'\\VCRUNTIME140.dll',installPath+'\\_bz2.pyd',installPath+'\\_lzma.pyd',installPath]
+
 print('DO NOT CLOSE THIS WINDOW')
 
 def ErrorHandler(func,path,err):
+    if path in KNOWN_FAILS: return
     print(f'WARN: Error raised by {func} removing {path}, {err}\nContinuing...')
 
 if os.path.exists(installPath):

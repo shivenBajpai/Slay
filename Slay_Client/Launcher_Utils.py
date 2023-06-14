@@ -478,7 +478,7 @@ class SettingsWindow:
         self.devFrame = ttk.Frame(self.mainframe,padding="12 12 12 12",borderwidth=1, relief="solid")
         self.devFrame.grid(column=1,row=3,columnspan=2,padx=(10,10),pady=(10,10),sticky=(N,W,E))
         ttk.Label(self.devFrame,text='Developer Settings:',font=('default',12),padding='0 0 0 12').grid(column=1,row=1,sticky=(S,E))
-        self.debugCheckbox = ttk.Checkbutton(self.devFrame, text='Enable Debugger' ,variable=self.settings['debug'],onvalue=True,offvalue=False)
+        self.debugCheckbox = ttk.Checkbutton(self.devFrame, text='Enable Debugger (disables resizing)' ,variable=self.settings['debug'],onvalue=True,offvalue=False)
         self.debugCheckbox.grid(column=1,row=2,sticky=(S,W))
         self.freezeCheckbox = ttk.Checkbutton(self.devFrame, text='Freeze game on crash' ,variable=self.settings['freeze'],onvalue=True,offvalue=False)
         self.freezeCheckbox.grid(column=1,row=3,sticky=(S,W))
