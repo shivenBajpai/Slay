@@ -6,7 +6,7 @@ UninstallString =  os.getcwd() + '\\uninstall.exe'
 InstallPath = os.getcwd()
 displayIcon = os.getcwd() + '\Slay_Server.exe'
 ExeName = 'Slay_Server.exe'
-EstimatedSize = 0x000030D4
+EstimatedSize = 0x000058AC
 displayVersion = '1.0'
 displayName = 'Slay Server'
 
