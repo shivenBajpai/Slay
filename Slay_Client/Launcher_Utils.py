@@ -254,7 +254,6 @@ class MainWindow:
         if custom:
             try:
                 ip = gethostbyname(self.custom_server[0])
-                print(ip)
             except (Exception):
                 print('gaierror')
                 self.status.set('Error resolving address,\ntry again if the issue \npersists,you have the wrong \naddress')

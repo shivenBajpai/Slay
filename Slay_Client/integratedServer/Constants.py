@@ -44,8 +44,8 @@ IP = 0.0.0.0'''
 try:
     config.read('./integratedServer/config.ini')
     PORT = int(config['BASIC']['Port'])
-    XSIZE = int(config['BASIC']['MapXSize'])
-    YSIZE = int(config['BASIC']['MapYSize'])
+    XSIZE = int(config['BASIC']['MapXSize'])+1
+    YSIZE = int(config['BASIC']['MapYSize'])+1
     MAX_COLOR = int(config['BASIC']['NumberOfPlayers'])
     BOTS = int(config['BASIC']['NumberOfBots'])
     if BOTS >= MAX_COLOR: raise Exception('Too many bots!')

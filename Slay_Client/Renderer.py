@@ -71,7 +71,7 @@ def drawShopWindow(screen,WINDOWX,gold):
     if gold >= 40:
         screen.blit(entities[KNIGHT],(WINDOWX+23,285))
         screen.blit(roboto.render('40',True,(0,0,0)),(WINDOWX+90,300))
-        screen.blit(roboto.render('36',True,(0,0,0)),(WINDOWX+140,300))
+        screen.blit(roboto.render('54',True,(0,0,0)),(WINDOWX+140,300))
         height += 40
 
     return height

@@ -204,7 +204,7 @@ def handleEvent(event,grid,moves,color,SetDebugPos,XMIN,YMIN,DEBUG):
                     double_up_flag = True
                     affected_cells.append(selected_city)
                     affected_cells.extend(verify(neighbours(mouse_pos[0],mouse_pos[1],1)))
-                    wage_change = math.floor(2*(3**(mouse_entity-MAN+1))-2*(3**(mouse_entity-MAN)))*(1 if pick_up_pos is None else 2)
+                    wage_change = 2*(3**(mouse_entity-MAN+1))-2*(3**(mouse_entity-MAN))*(1 if pick_up_pos is None else 2)
                     cost = 10*(mouse_entity-CITY) if pick_up_pos is None else 0
                     grid[selected_city[0]][selected_city[1]].gold -= cost
                     grid[selected_city[0]][selected_city[1]].wages += wage_change

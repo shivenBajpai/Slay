@@ -58,14 +58,16 @@ IP = 0.0.0.0'''
 try:
     config.read('config.ini')
     PORT = int(config['BASIC']['Port'])
-    XSIZE = int(config['BASIC']['MapXSize'])+1
-    if XSIZE+1 < 3: 
-        print('Map X Size must be atleast 3. Overriding')
+    XSIZE = int(config['BASIC']['MapXSize'])
+    if XSIZE < 4: 
+        print('Map X Size must be atleast 4. Overriding')
         XSIZE = 5
-    YSIZE = int(config['BASIC']['MapYSize'])+1
-    if YSIZE+1 < 3: 
-        print('Map Y Size must be atleast 3. Overriding')
+    XSIZE += 1
+    YSIZE = int(config['BASIC']['MapYSize'])
+    if YSIZE < 4: 
+        print('Map Y Size must be atleast 4. Overriding')
         YSIZE = 5
+    YSIZE += 1
     MAX_COLOR = int(config['BASIC']['NumberOfPlayers'])
     if MAX_COLOR > len(COLOR_MAPPING): raise Exception('Too many players! Max 10')
     BOTS = int(config['BASIC']['NumberOfBots'])

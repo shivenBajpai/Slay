@@ -42,7 +42,6 @@ def connect(ip,port,password=None,info_req=False,):
         if info_req:
             send_message(client,Packet(Packet.SERVERINFO))
             pack = recieve_message(client)
-            print(pack.data)
             disconnect()
             return pack.data
 
