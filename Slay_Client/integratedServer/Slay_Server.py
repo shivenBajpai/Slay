@@ -44,6 +44,7 @@ def main():
     class GameOver(Exception): ...
 
     connections = {}
+    colorAddrMapping = {}
     connectionsAddrList = []
 
     print('Server listening on port', PORT)
@@ -76,6 +77,7 @@ def main():
                         conn.close()
                         continue
                     connections[addr] = conn
+                    colorAddrMapping[len(connections)] = addr
                     connectionsAddrList.append(addr)
                     send_message(conn,Packet(
                         Packet.ID,
@@ -189,7 +191,7 @@ def main():
                                 if turn == len(activePlayers): 
                                     turn = 0
                                     move = Move({'source':0},GameUpdate([]),None,GameUpdate([]))
-                                    if winCheck(serverside_grid,activePlayers):
+                                    if winCheck(serverside_grid,activePlayers,connectionsAddrList,colorAddrMapping):
                                         broadcast(connections,Packet(Packet.END,{'winner':activePlayers[0]-1}))
                                         raise GameOver(activePlayers[0])
                                     elif activePlayers[0]>MAX_CLIENTS:

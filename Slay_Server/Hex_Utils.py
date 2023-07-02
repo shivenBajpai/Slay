@@ -183,7 +183,7 @@ def CountCellsofColor(grid,claimed=True):
     count.sort(reverse=True,key=lambda x:x[1])
     return count
 
-def winCheck(grid,activePlayers):
+def winCheck(grid,activePlayers,connectionsAddrList,colorAddrMapping):
 
     hallcount = [0]*MAX_COLOR
 
@@ -194,6 +194,8 @@ def winCheck(grid,activePlayers):
     for idx, count in enumerate(hallcount):
         if count == 0 and idx+1 in activePlayers:
             activePlayers.remove(idx+1)
+            if idx+1 in colorAddrMapping.keys():
+                connectionsAddrList.remove(colorAddrMapping[idx+1])
     
     if len(activePlayers)==1:
         return True

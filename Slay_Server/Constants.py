@@ -4,7 +4,7 @@ import sys
 
 config = configparser.ConfigParser()
 
-COLOR_MAPPING = ['Blue','Yellow','Pink','Green','Lime','Violet','Turqoise','Orange','Red','Brown']
+COLOR_MAPPING = ['Blue','Yellow','Pink','Green','Turqoise','Lime','Violet','Orange','Red','Brown']
 NONE = 0
 TREE = 1
 PALM = 2

@@ -37,6 +37,7 @@ def main():
 
     connections = {}
     connectionsAddrList = []
+    colorAddrMapping = {}
 
     print('Server listening on port', PORT)
     print(f'Server Discovery: {DISCOVERABLE}')
@@ -69,6 +70,7 @@ def main():
                         continue
                     connections[addr] = conn
                     connectionsAddrList.append(addr)
+                    colorAddrMapping[len(connections)] = addr
                     send_message(conn,Packet(
                         Packet.ID,
                         {'id':len(connections),'config':{'XSIZE':XSIZE,'YSIZE':YSIZE}}    
@@ -181,7 +183,7 @@ def main():
                                 if turn == len(activePlayers): 
                                     turn = 0
                                     move = Move({'source':0},GameUpdate([]),None,GameUpdate([]))
-                                    if winCheck(serverside_grid,activePlayers):
+                                    if winCheck(serverside_grid,activePlayers,connectionsAddrList,colorAddrMapping):
                                         broadcast(connections,Packet(Packet.END,{'winner':activePlayers[0]-1}))
                                         raise GameOver(activePlayers[0])
                                     elif activePlayers[0]>MAX_CLIENTS:

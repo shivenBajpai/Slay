@@ -1,5 +1,5 @@
-NAME_MAPPING = ['Blue','Yellow','Pink','Green','Lime','Violet','Turqoise','Orange','Red','Brown']
-COLOR_MAPPING = [(66,92,245),(100,95,17),(200,62,132),(19,96,42),(42,169,61),(109,74,179),(62,157,165),(219,159,32),(224,31,29),(128,72,23)] # old blue - (50,130,246)
+NAME_MAPPING = ['Blue','Yellow','Pink','Green','Turqoise','Lime','Violet','Orange','Red','Brown']
+COLOR_MAPPING = [(66,92,245),(100,95,17),(200,62,132),(19,96,42),(62,157,165),(42,169,61),(109,74,179),(219,159,32),(224,31,29),(128,72,23)] # old blue - (50,130,246)
 NONE = 0
 TREE = 1
 PALM = 2
