@@ -28,6 +28,7 @@ def main(filename,currentconfig):
     global debugPos
     freeze=currentconfig['freeze']
     DEBUG=currentconfig['debug']
+    FRAMES_PER_ANIMATION=50-currentconfig['animation_speed']
 
     try:
         replayFile = Replay(filename)
@@ -54,10 +55,12 @@ def main(filename,currentconfig):
     screen.blit(pygame.image.load('./Slay_Assets/loading_text.png'),(0,0))
     pygame.display.flip()
 
+    from TextureLoader import loadTextures
     from Renderer import cells,drawEntities,drawMapLayer,drawMouseEntity,drawBaseLayer,drawReplaySideBar,reset_renderer,drawDebugger
     from Move_Utils import handleReplayEvent,get_mouse_entity,reset_move_utils
 
-    reset_move_utils(WINDOWX,WINDOWY)
+    loadTextures()
+    reset_move_utils(WINDOWX,WINDOWY,FRAMES_PER_ANIMATION)
     reset_renderer(WINDOWX,WINDOWY)
 
     pygame.display.set_icon(cells[0][0])
@@ -135,13 +138,13 @@ def main(filename,currentconfig):
         replayFile.close()
         HandleFreezing('Slay - Frozen - GameEndingException',err)
         pygame.quit()
-        return 'Error: ' + str(err), False
+        return 'Error: ' + str(err.args[0]), False, 0, 0, 0, 0
 
     except GameFinishedException as err:
         replayFile.close()
         HandleFreezing('Slay - Frozen - Game Finished','')
         pygame.quit()
-        return str(err), True
+        return str(err.args[0]), True, 0, 0, 0, 0
 
     except Exception as err:
         replayFile.close()
@@ -149,4 +152,4 @@ def main(filename,currentconfig):
         pygame.quit()
         print(err)
         tb.print_exc()
-        return 'Client-side Error: ' + str(err), False
+        return 'Client-side Error: ' + str(err.args[0]), False, 0, 0, 0, 0

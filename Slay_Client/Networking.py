@@ -8,6 +8,7 @@ import traceback as tb
 
 turn = 0 # corresponds to color/userid whose turn it is. This is not the same as serverside variable turn
 color = 0
+round_count = 0
 client = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
 waitingFlag = False
 
@@ -30,7 +31,8 @@ def connect(ip,port,password=None,info_req=False,):
     userid = None
     config = None
     result = None
-    global turn, color
+    global turn, color, round_count
+    round_count = 0
     turn = 0
     color = 0
 
@@ -116,13 +118,28 @@ def is_our_turn():
 def get_turn():
     return turn
 
-def network(moves,grid,animations,color,selected_city,set_selected_city,replayFile):
+def set_turn(value):
+    global turn, waitingFlag
+    turn = value
 
-    global our_turn, turn, waitingFlag
+def set_waiting_flag():
+    global waitingFlag
+    waitingFlag = True
+
+def clear_waiting_flag():
+    global waitingFlag
+    waitingFlag = False
+
+def network(moves,animations,color,replayFile,MoveClass):
+
+    global turn, waitingFlag, round_count
 
     try:
         pack = recieve_message(client)
         replayFile.writeNext(pack)
+
+        # TEMP
+        print(f'recieved packet #{pack.count}')
 
         if pack.code == Packet.DISCONNECT:
             print('Connection terminated by server')
@@ -135,19 +152,24 @@ def network(moves,grid,animations,color,selected_city,set_selected_city,replayFi
         elif pack.code == Packet.UPDATE:
             if pack.data.metadata['source'] != color: 
                 move = pack.data
-                move.preanimation.apply(grid)
-                set_selected_city(fixHighlighting(grid,selected_city))
-                if move.animation is not None:
-                    move.animation.prepare()
-                    animations.append(move)
+                move.__class__ = MoveClass
+                # COMPAT v1.0 conversion
+                if not hasattr(move,"animated"):
+                    move.animated = (move.animation is not None)
+                    move.preanimated = False
+                if move.animated: move.animation.prepare()
+                animations.append(move)
+                if pack.data.metadata['source'] == 0:
+                    round_count += 1
 
         elif pack.code == Packet.PLAY:
-            waitingFlag = False
-            turn = pack.data['turn']
+            # TEMP
+            print(f'Play: {pack.data["turn"]}')
+            animations.append(pack.data['turn'])
 
         elif pack.code == Packet.END:
             print('Player',pack.data['winner'],'won')
-            raise GameFinishedException('Game Ended: ' + NAME_MAPPING[pack.data['winner']] + ' victory!')
+            raise GameFinishedException('Game Ended: ' + NAME_MAPPING[pack.data['winner']] + ' victory!', pack.data['winner']==color, round_count)
 
         else:
             print('Invalid server response:', pack.code, pack.data)
@@ -159,10 +181,9 @@ def network(moves,grid,animations,color,selected_city,set_selected_city,replayFi
 
     if len(moves) != 0:
         if moves[0].__class__ == str: 
-            waitingFlag = True
+            set_waiting_flag()
             send_message(client,Packet(Packet.END_TURN))  
         else: send_message(client,Packet(Packet.MOVE,moves[0]))
-        our_turn=False
         del moves[0]
 
 def getServers(servers,server_ips):

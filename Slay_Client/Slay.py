@@ -1,4 +1,5 @@
 import contextlib
+import datetime
 with contextlib.redirect_stdout(None): import pygame
 import traceback as tb
 from Networking import *
@@ -28,6 +29,7 @@ def main(color,config):
     global debugPos
     freeze=config['freeze']
     DEBUG=config['debug']
+    FRAMES_PER_ANIMATION=50-config['animation_speed']
 
     screen = pygame.display.set_mode([640, 480])
     pygame.display.set_caption('Slay')
@@ -64,17 +66,20 @@ def main(color,config):
 
     restart_mixer(config['volume'])
 
+    from TextureLoader import loadTextures
     from Renderer import cells,drawEntities,drawMapLayer,drawMouseEntity,drawBaseLayer,drawSideBar,reset_renderer,drawDebugger
-    from Move_Utils import handleEvent,get_mouse_entity,get_selected_city,set_selected_city,reset_move_utils
+    from Move_Utils import handleEvent,get_mouse_entity,get_selected_city,set_selected_city,reset_move_utils,Move
 
-    reset_move_utils(WINDOWX,WINDOWY)
+    loadTextures()
+    reset_move_utils(WINDOWX,WINDOWY,FRAMES_PER_ANIMATION)
     reset_renderer(WINDOWX,WINDOWY)
 
     pygame.display.set_icon(cells[color][0])
 
     moves = []
-    animations = []
+    animations: list[Move] = []
     beat = 0
+    startTime = datetime.datetime.now()
 
     try:
         while True:
@@ -86,7 +91,7 @@ def main(color,config):
             for event in pygame.event.get(): handleEvent(event,grid,moves,color,setDebugPos,WINDOWX,WINDOWY,DEBUG)
                 
             # talk to server
-            network(moves,grid,animations,color,get_selected_city(),set_selected_city,replayFile)
+            network(moves,animations,color,replayFile,Move)
 
             # draw
             drawBaseLayer(screen,pygame.display.get_window_size()[0]-200,pygame.display.get_window_size()[1])
@@ -95,12 +100,21 @@ def main(color,config):
             drawSideBar(screen, grid, get_selected_city(), pygame.display.get_window_size()[0]-200, pygame.display.get_window_size()[1]-(200 if DEBUG else 0), color)
             drawMouseEntity(screen, get_mouse_entity(), pygame.mouse.get_pos())
             if DEBUG: drawDebugger(screen,grid,debugPos,pygame.display.get_window_size()[1]-200,pygame.display.get_window_size()[0]-200)
-
-            for index, animation in enumerate(animations):
-                if animation.animation.animate(screen): 
-                    animation.postanimation.apply(grid)
+            
+            try:
+                if animations[0].__class__ == int:
+                    set_turn(animations[0])
+                    if animations[0] != color: clear_waiting_flag()
+                    del animations[0]
+                if not animations[0].preanimated:
+                    animations[0].preanimation.apply(grid)
+                    set_selected_city(fixHighlighting(grid,get_selected_city()))
+                if not animations[0].animated or animations[0].animation.animate(screen): 
+                    animations[0].postanimation.apply(grid)
                     set_selected_city(Hex_Utils.fixHighlighting(grid,get_selected_city()))
-                    del animations[index]
+                    del animations[0]
+            except IndexError:
+                pass
     
             pygame.display.flip()
             time.sleep(1/100)
@@ -109,13 +123,13 @@ def main(color,config):
         replayFile.close()
         HandleFreezing('Slay - Frozen - GameEndingException',err)
         pygame.quit()
-        return 'Error: ' + str(err), False
+        return 'Error: ' + str(err.args[0]), False, 0, 0, 0, 0
 
     except GameFinishedException as err:
         replayFile.close()
         HandleFreezing('Slay - Frozen - Game Finished','')
         pygame.quit()
-        return str(err), True
+        return str(err.args[0]), True, 1, err.args[1], err.args[2], int((datetime.datetime.now()-startTime).total_seconds()//60)
 
     except Exception as err:
         replayFile.close()
@@ -123,4 +137,4 @@ def main(color,config):
         pygame.quit()
         print(err)
         tb.print_exc()
-        return 'Client-side Error: ' + str(err), False
+        return 'Client-side Error: ' + str(err.args[0]), False, 0, 0, 0, 0

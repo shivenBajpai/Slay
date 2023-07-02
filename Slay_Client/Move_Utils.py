@@ -3,7 +3,7 @@ from pygame.locals import QUIT, MOUSEMOTION, MOUSEBUTTONDOWN, MOUSEBUTTONUP, VID
 from pygame import Rect, mouse
 from Constants import *
 from Hex_Utils import *
-from Networking import declareExit,is_our_turn
+from Networking import declareExit,is_our_turn,set_waiting_flag
 from Renderer import resize
 import Sound_Utils
 import math
@@ -20,7 +20,7 @@ end_button_rect = None
 next_button_rect = None
 selected_city = None
 
-def reset_move_utils(WINDOWX,WINDOWY):
+def reset_move_utils(WINDOWX,WINDOWY,frames_per_animation):
     global mouse_pos, mousedown, mouse_entity, valid_locations, pick_up_pos, shop_button_rects, selected_city, mouse_on_grid, end_button_rect, next_button_rect
     mouse_pos = (0,0)
     mousedown = False
@@ -38,6 +38,7 @@ def reset_move_utils(WINDOWX,WINDOWY):
     ) # (Bounding Box, Cost, Entity)
     end_button_rect = Rect((WINDOWX + 33,WINDOWY-50),(134,33))
     next_button_rect = Rect((WINDOWX + 33,WINDOWY-50),(134,33))
+    Animation.frames_per_animation = frames_per_animation
 
 def get_mouse_entity():
     return mouse_entity
@@ -154,6 +155,7 @@ def handleEvent(event,grid,moves,color,SetDebugPos,XMIN,YMIN,DEBUG):
 
         elif is_our_turn() and end_button_rect.collidepoint(mouse.get_pos()):
             moves.append('end')
+            set_waiting_flag()
             Sound_Utils.click_sound.play()
 
         elif is_our_turn() and selected_city != None:
@@ -331,12 +333,19 @@ def handleEvent(event,grid,moves,color,SetDebugPos,XMIN,YMIN,DEBUG):
     return
 
 class Animation:
-    def __init__(self,entity: int,startpos: tuple,endpos: tuple) -> None:
+
+    frames_per_animation = 15
+
+    def __init__(self,entity: int,startpos: tuple,endpos: tuple,fast: bool = False) -> None:
         self.entity = entity
         self.startpos = startpos
         self.endpos = endpos
         
     def prepare(self) -> None:
+
+        if Animation.frames_per_animation == 0:
+            self.animate = lambda x: True
+            return
 
         if (self.startpos[1]%2==1):
             start = ((self.startpos[0]+0.5)*48,self.startpos[1]*36)
@@ -349,7 +358,7 @@ class Animation:
             end = (self.endpos[0]*48,self.endpos[1]*36)
 
         self.frame = 0
-        self.frames = getpoints(start,end,15)
+        self.frames = getpoints(start,end,Animation.frames_per_animation)
 
     def animate(self,screen) -> bool:
 
@@ -373,6 +382,8 @@ class Move: # just a data struct
         self.preanimation = preanim
         self.animation = anim
         self.postanimation = postanim
+        self.preanimated = False
+        self.animated = (anim is not None)
 
     '''
     Metadata struct:

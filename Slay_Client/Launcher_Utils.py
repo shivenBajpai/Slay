@@ -35,6 +35,7 @@ class MainWindow:
         self.scanips = []
         self.scancall = 0
         self.settings = {}
+        self.stats = {}
 
         self.window = Tk()
         self.window.title('Slay Launcher')
@@ -59,30 +60,6 @@ class MainWindow:
         self.buttonframe = ttk.Frame(self.mainframe,padding="0 0 15 24")
         self.buttonframe.grid(column=1, row=3,columnspan=3, sticky=(N))
 
-        '''self.connect_button = ttk.Button(self.buttonframe, text='Connect', command=self.ConnectButtonPress, padding='0 2 0 2',width=30)
-        self.connect_button.grid(column=1,row=1,columnspan=2,sticky=(E))
-        self.connect_button.configure(state='disabled')
-
-        self.direct_connect_button = ttk.Button(self.buttonframe, text='Direct Connect', command=self.DirectConnectButtonPress, padding='0 2 0 2',width=30)
-        self.direct_connect_button.grid(column=3,row=1,columnspan=2,sticky=(N),padx=(8,8))
-
-        self.server_button = ttk.Button(self.buttonframe, text='Start Game On Lan', command=self.ServerButtonPress, padding='0 2 0 2',width=30)
-        self.server_button.grid(column=5,row=1,columnspan=2,sticky=(W))
-
-        self.settings_button = ttk.Button(self.buttonframe, text='Settings', command=self.SettingsButtonPress, padding='0 2 0 2',width=45)
-        self.settings_button.grid(column=1,row=2,columnspan=3,sticky=(E),pady=(8,8),padx=(4,4))
-        
-        self.replays_button = ttk.Button(self.buttonframe, text='Replays', command=self.ReplayButtonPress, padding='0 2 0 2',width=45)
-        self.replays_button.grid(column=4,row=2,columnspan=3,sticky=(W),pady=(8,8),padx=(4,4))
-
-        self.help_button = ttk.Button(self.buttonframe, text='Help↗', command=self.HelpButtonPress, padding='0 2 0 2',width=45)
-        self.help_button.grid(column=1,row=3,columnspan=3,sticky=(E),padx=(4,4))
-
-        self.credits_button = ttk.Button(self.buttonframe, text='Credits', command=self.CreditsButtonPress, padding='0 2 0 2',width=45)
-        self.credits_button.grid(column=4,row=3,sticky=(W),columnspan=3,padx=(4,4))'''
-
-        #MARKER
-
         self.connect_button = ttk.Button(self.buttonframe, text='Connect', command=self.ConnectButtonPress, padding='0 2 0 2',width=90)
         self.connect_button.grid(column=1,row=1,columnspan=6,sticky=(N),padx=(8,8))
         self.connect_button.configure(state='disabled')
@@ -99,18 +76,22 @@ class MainWindow:
         self.replays_button = ttk.Button(self.buttonframe, text='Replays', command=self.ReplayButtonPress, padding='0 2 0 2',width=44)
         self.replays_button.grid(column=4,row=4,columnspan=3,sticky=(W),pady=(8,8),padx=(3,3))
 
-        self.help_button = ttk.Button(self.buttonframe, text='Help↗', command=self.HelpButtonPress, padding='0 2 0 2',width=44)
-        self.help_button.grid(column=1,row=5,columnspan=3,sticky=(E),padx=(3,3))
+        self.help_button = ttk.Button(self.buttonframe, text='Help↗', command=self.HelpButtonPress, padding='0 2 0 2',width=28)
+        self.help_button.grid(column=1,row=5,columnspan=2,sticky=(E),padx=(0,3))
 
-        self.credits_button = ttk.Button(self.buttonframe, text='Credits', command=self.CreditsButtonPress, padding='0 2 0 2',width=44)
-        self.credits_button.grid(column=4,row=5,sticky=(W),columnspan=3,padx=(3,3))
+        self.credits_button = ttk.Button(self.buttonframe, text='Credits', command=self.CreditsButtonPress, padding='0 2 0 2',width=28)
+        self.credits_button.grid(column=3,row=5,sticky=(W,E),columnspan=2,padx=(4,4))
+
+        self.stats_button = ttk.Button(self.buttonframe, text='Stats', command=self.StatsButtonPress, padding='0 2 0 2',width=28)
+        self.stats_button.grid(column=5,row=5,sticky=(W),columnspan=2,padx=(3,3))
 
         self.status = StringVar()
         self.status_label = ttk.Label(self.mainframe,textvariable=self.status,padding='0 8 0 0')
         self.status_label.grid(column=2, row=4, sticky=(N))
 
         self.initServerlist()
-        self.Loadsettings()
+        self.LoadSettings()
+        self.LoadStats()
         self.window.after(500,self.ScanforGames)
         self.window.mainloop()
 
@@ -186,19 +167,58 @@ class MainWindow:
             if self.connect_button.config()['state'][-1] != 'enabled': self.connect_button.configure(state='enabled')
             self.selected_server = list(self.tree.item(self.tree.focus()).values())
     
-    def Loadsettings(self) -> None:
+    def LoadStats(self) -> None:
+        DEFAULTSTATS = '''[STATS]
+        gamesPlayed = 0
+        gamesWon = 0
+        longestGame = 0
+        totalTime = 0'''
+
+        if os.path.exists('./stats.ini'):
+            config = configparser.ConfigParser()
+            config.read('stats.ini')
+            self.stats['gamesPlayed'] = int(config['STATS']['gamesPlayed'])
+            self.stats['gamesWon'] = int(config['STATS']['gamesWon'])
+            self.stats['longestGame'] = int(config['STATS']['longestGame'])
+            self.stats['totalTime'] = int(config['STATS']['totalTime'])
+        else:
+            self.stats['gamesPlayed'] = 0
+            self.stats['gamesWon'] = 0
+            self.stats['longestGame'] = 0
+            self.stats['totalTime'] = 0
+            with open('./stats.ini','x') as f: f.write(DEFAULTSTATS)
+
+    def IncrementStats(self, longest_game: int = 0, time_played: int = 0, games_played: int = 0, games_won: int = 0) -> None:
+
+        if longest_game > self.stats['longestGame']: self.stats['longestGame'] = longest_game
+        self.stats['totalTime'] += time_played
+        self.stats['gamesPlayed'] += games_played
+        self.stats['gamesWon'] += games_won
+        self.SaveStats()
+
+    def SaveStats(self) -> None:
+        newconfig = configparser.ConfigParser()
+        newconfig['STATS'] = {}
+        for key,value in self.stats.items(): newconfig['STATS'][key] = str(value)
+
+        with open('./stats.ini','w') as f: newconfig.write(f)
+
+    def LoadSettings(self) -> None:
         DEFAULTCONFIG = '''[SETTINGS]
         volume = 65
         debug = False
-        freeze = False'''
+        freeze = False
+        animation_speed = 35'''
 
         if os.path.exists('./config.ini'):
             config = configparser.ConfigParser()
             config.read('config.ini')
             self.settings['volume'] = int(config['SETTINGS']['volume'])
+            self.settings['animation_speed'] = int(config['SETTINGS']['animation_speed'])
             self.settings['debug'] = config['SETTINGS']['debug'] == 'True'
             self.settings['freeze'] = config['SETTINGS']['freeze'] == 'True'
         else:
+            self.settings['animation_speed'] = 35
             self.settings['volume'] = 65
             self.settings['debug'] = False
             self.settings['freeze'] = False
@@ -231,7 +251,11 @@ class MainWindow:
     def CreditsButtonPress(self) -> None:
         self.window.event_generate('<<DisableUI>>')
         CreditsWindow(self.window)
-        
+    
+    def StatsButtonPress(self) -> None:
+        self.window.event_generate('<<DisableUI>>')
+        StatsWindow(self.window,self.stats)
+
     def ServerButtonPress(self) -> None:
         self.window.event_generate('<<DisableUI>>')
         integratedServerWindow(self.window,self.executor,self.run,(self.status,self.status_label))
@@ -275,10 +299,11 @@ class MainWindow:
             self.run(self.gameslist[int(self.selected_server[0])][0])
 
     def handleGameReturn(self,future) -> None:
-        result, success = future.result()
+        result, success, realGame, victory, turns, time = future.result()
 
         disconnect()
         self.raise_above_all()
+        self.IncrementStats(games_played=realGame,games_won=victory,longest_game=turns,time_played=time)
 
         self.status.set(result)
         if success: self.status_label.configure(foreground='green')
@@ -332,6 +357,7 @@ class MainWindow:
         self.credits_button.configure(state='enabled')
         self.replays_button.configure(state='enabled')
         self.server_button.configure(state='enabled')
+        self.stats_button.configure(state='enabled')
         self.tree.configure(selectmode='browse')
 
     def DisableUI(self,x=None):
@@ -343,6 +369,7 @@ class MainWindow:
         self.credits_button.configure(state='disabled')
         self.replays_button.configure(state='disabled')
         self.server_button.configure(state='disabled')
+        self.stats_button.configure(state='disabled')
         self.tree.configure(selectmode='none')
         self.window.update_idletasks()
 
@@ -367,6 +394,10 @@ class ConnectionPopUp:
         self.window.columnconfigure(0, weight=1)
         self.window.rowconfigure(0, weight=1)
         self.window.protocol("WM_DELETE_WINDOW", self.windowClosed)
+        self.window.bind("<Return>", self.ConnectButtonPress)
+        self.window.bind("<KP_Enter>", self.ConnectButtonPress)
+        self.window.bind("<Key-Escape>", self.windowClosed)
+        self.window.bind("<Command-.>", self.windowClosed)
 
         self.mainframe = ttk.Frame(self.window,padding="3 3 12 12")
         self.mainframe.grid(column=0, row=0, sticky=(N, W, E, S))
@@ -393,14 +424,14 @@ class ConnectionPopUp:
 
         self.window.mainloop()
 
-    def ConnectButtonPress(self) -> None:
+    def ConnectButtonPress(self,e=None) -> None:
         self.returnObject.clear()
         self.returnObject.extend([self.ip_field.get(),self.port_field.get()])
         self.mainWindow.event_generate('<<EnableUI>>')
         self.window.destroy()
         self.mainWindow.event_generate('<<StartGame>>')
 
-    def windowClosed(self) -> None:
+    def windowClosed(self,e=None) -> None:
         self.mainWindow.event_generate('<<EnableUI>>')
         self.window.destroy()
 
@@ -417,6 +448,10 @@ class PasswordPopUp:
         self.window.columnconfigure(0, weight=1)
         self.window.rowconfigure(0, weight=1)
         self.window.protocol("WM_DELETE_WINDOW", self.windowClosed)
+        self.window.bind("<Return>", self.ConnectButtonPressed)
+        self.window.bind("<KP_Enter>", self.ConnectButtonPressed)
+        self.window.bind("<Key-Escape>", self.windowClosed)
+        self.window.bind("<Command-.>", self.windowClosed)
 
         self.mainframe = ttk.Frame(self.window,padding="3 3 12 12")
         self.mainframe.grid(column=0, row=0, sticky=(N, W, E, S))
@@ -436,11 +471,11 @@ class PasswordPopUp:
         self.window.mainloop()
 
 
-    def windowClosed(self) -> None:
+    def windowClosed(self,e=None) -> None:
         self.mainWindow.event_generate('<<EnableUI>>')
         self.window.destroy()
 
-    def ConnectButtonPressed(self) -> None:
+    def ConnectButtonPressed(self,e=None) -> None:
         self.window.destroy()
         self.mainWindow.after(100,self.runFunction[0],self.runFunction[1],self.pass_field.get())
 
@@ -449,6 +484,7 @@ class SettingsWindow:
         
         self.setter = setting_setter
         self.settings = {'volume': IntVar(value=current_settings['volume']),
+                         'animation_speed': IntVar(value=current_settings['animation_speed']),
                          'debug': BooleanVar(value=current_settings['debug']),
                          'freeze': BooleanVar(value=current_settings['freeze'])}
 
@@ -460,6 +496,8 @@ class SettingsWindow:
         self.window.columnconfigure(0, weight=1)
         self.window.rowconfigure(0, weight=1)
         self.window.protocol("WM_DELETE_WINDOW", self.windowClosed)
+        self.window.bind("<Key-Escape>", self.windowClosed)
+        self.window.bind("<Command-.>", self.windowClosed)
 
         self.mainframe = ttk.Frame(self.window,padding="3 3 12 12")
         self.mainframe.grid(column=0, row=0, sticky=(N, W, E, S))
@@ -468,15 +506,22 @@ class SettingsWindow:
         self.header.grid(column=1,row=1,columnspan=3,sticky=(N))
 
         self.soundFrame = ttk.Frame(self.mainframe,padding="12 12 12 12",borderwidth=1, relief="solid")
-        self.soundFrame.grid(column=1,row=2,columnspan=2,padx=(10,10))
+        self.soundFrame.grid(column=1,row=2,columnspan=2,padx=(10,10),sticky=(N,W,E))
         ttk.Label(self.soundFrame,text='Sound Settings:',font=('default',12),padding='0 0 0 12').grid(column=1,row=1,sticky=(S,E))
         ttk.Label(self.soundFrame,text='Master Volume:',padding='0 0 0 4').grid(column=1,row=2,sticky=(S,E))
         self.soundScale = Scale(self.soundFrame, from_=0, to=100, orient=HORIZONTAL,variable=self.settings['volume'])
         self.soundScale.grid(column=2,row=2,sticky=(S,W))
 
+        self.gameFrame = ttk.Frame(self.mainframe,padding="12 12 12 12",borderwidth=1, relief="solid")
+        self.gameFrame.grid(column=1,row=3,columnspan=2,padx=(10,10),pady=(10,0),sticky=(N,W,E))
+        ttk.Label(self.gameFrame,text='Game Settings:',font=('default',12),padding='0 0 0 12').grid(column=1,row=1,sticky=(S,E))
+        ttk.Label(self.gameFrame,text='Animation Speed:',padding='0 0 0 4').grid(column=1,row=2,sticky=(S,E))
+        self.animationSpeedScale = Scale(self.gameFrame, from_=0, to=50, orient=HORIZONTAL,variable=self.settings['animation_speed'])
+        self.animationSpeedScale.grid(column=2,row=2,sticky=(S,W))
+
         self.devFrame = ttk.Frame(self.mainframe,padding="12 12 12 12",borderwidth=1, relief="solid")
-        self.devFrame.grid(column=1,row=3,columnspan=2,padx=(10,10),pady=(10,10),sticky=(N,W,E))
-        ttk.Label(self.devFrame,text='Developer Settings:',font=('default',12),padding='0 0 0 12').grid(column=1,row=1,sticky=(S,E))
+        self.devFrame.grid(column=1,row=4,columnspan=2,padx=(10,10),pady=(10,0),sticky=(N,W,E))
+        ttk.Label(self.devFrame,text='Developer Settings:',font=('default',12),padding='0 0 0 12').grid(column=1,row=1,sticky=(S,W))
         self.debugCheckbox = ttk.Checkbutton(self.devFrame, text='Enable Debugger (disables resizing)' ,variable=self.settings['debug'],onvalue=True,offvalue=False)
         self.debugCheckbox.grid(column=1,row=2,sticky=(S,W))
         self.freezeCheckbox = ttk.Checkbutton(self.devFrame, text='Freeze game on crash' ,variable=self.settings['freeze'],onvalue=True,offvalue=False)
@@ -484,7 +529,7 @@ class SettingsWindow:
 
         self.window.mainloop()
 
-    def windowClosed(self) -> None:
+    def windowClosed(self,e=None) -> None:
         self.mainWindow.event_generate('<<EnableUI>>')
         self.mainWindow.after_idle(self.setter,self.settings)
         self.window.destroy()
@@ -502,6 +547,10 @@ class ReplayWindow:
         self.window.columnconfigure(0, weight=1)
         self.window.rowconfigure(0, weight=1)
         self.window.protocol("WM_DELETE_WINDOW", self.windowClosed)
+        self.window.bind("<Return>", self.confirmPress)
+        self.window.bind("<KP_Enter>", self.confirmPress)
+        self.window.bind("<Key-Escape>", self.windowClosed)
+        self.window.bind("<Command-.>", self.windowClosed)
 
         self.mainframe = ttk.Frame(self.window,padding="3 3 12 12")
         self.mainframe.grid(column=0, row=0, sticky=(N, W, E, S))
@@ -524,7 +573,7 @@ class ReplayWindow:
 
         self.window.mainloop()
     
-    def confirmPress(self) -> None:
+    def confirmPress(self,e=None) -> None:
         self.windowClosed()
         if self.selection is not None: self.playFunction(self.selection)
 
@@ -536,7 +585,7 @@ class ReplayWindow:
             self.selection = self.replayList[self.listbox.curselection()[0]]
             self.confirmBox.configure(state='enabled')
 
-    def windowClosed(self) -> None:
+    def windowClosed(self,e=None) -> None:
         self.mainWindow.event_generate('<<EnableUI>>')
         self.window.destroy()
 
@@ -551,6 +600,8 @@ class CreditsWindow:
         self.window.columnconfigure(0, weight=1)
         self.window.rowconfigure(0, weight=1)
         self.window.protocol("WM_DELETE_WINDOW", self.windowClosed)
+        self.window.bind("<Key-Escape>", self.windowClosed)
+        self.window.bind("<Command-.>", self.windowClosed)
 
         self.mainframe = ttk.Frame(self.window,padding="3 3 12 12")
         self.mainframe.grid(column=0, row=0, sticky=(N, W, E, S))
@@ -563,7 +614,7 @@ class CreditsWindow:
         self.window.mainloop()
 
 
-    def windowClosed(self) -> None:
+    def windowClosed(self,e=None) -> None:
         self.mainWindow.event_generate('<<EnableUI>>')
         self.window.destroy()
 
@@ -585,6 +636,8 @@ class integratedServerWindow:
         self.window.columnconfigure(0, weight=1)
         self.window.rowconfigure(0, weight=1)
         self.window.protocol("WM_DELETE_WINDOW", self.windowClosed)
+        self.window.bind("<Key-Escape>", self.windowClosed)
+        self.window.bind("<Command-.>", self.windowClosed)
 
         self.loadSettings()
 
@@ -634,6 +687,9 @@ class integratedServerWindow:
         self.BotSlider = Scale(self.gameFrame, from_=0, to=10, orient=HORIZONTAL,variable=self.settings['BOTS'])
         self.BotSlider.grid(column=2,row=5,sticky=(S,W))
 
+        self.discoveryCheckbox = ttk.Checkbutton(self.gameFrame, text='Instant Bot Moves' ,variable=self.settings['FASTMODE'],onvalue=True,offvalue=False)
+        self.discoveryCheckbox.grid(column=2,row=6,sticky=(S,W),pady=(10,0))
+
         self.buttonFrame = ttk.Frame(self.mainframe,padding="12 12 12 12",borderwidth=1)
         self.buttonFrame.grid(column=1,row=4,columnspan=2,padx=(10,10),pady=(10,10),sticky=(N))
         
@@ -668,7 +724,7 @@ class integratedServerWindow:
             self.statusTextVar.set(f'')
             self.connectButton.configure(state='enabled')
 
-    def windowClosed(self) -> None:
+    def windowClosed(self,e=None) -> None:
         self.saveSettings()
         self.mainWindow.event_generate('<<EnableUI>>')
         self.window.destroy()
@@ -703,6 +759,9 @@ MapYSize = 15
 NumberOfPlayers = 2
 NumberofBots = 0
 
+# Whether bots play all their moves at once, or they play their moves slowly (1 by 1)
+BotFastMode = False
+
 # Automatically-Relaunch server every time game ends/crashes
 AutoReboot = False
 
@@ -730,6 +789,7 @@ IP = 0.0.0.0'''
         self.settings['MAX_COLOR'] = IntVar(value=2)
         self.settings['BOTS'] = IntVar(value=0)
         self.settings['DISCOVERABLE'] = BooleanVar(value=True)
+        self.settings['FASTMODE'] = BooleanVar(value=False)
         self.settings['NAME'] = StringVar(value='Local Slay Server')
         self.settings['PASSWORD'] = StringVar(value='')
 
@@ -741,6 +801,7 @@ IP = 0.0.0.0'''
             self.settings['YSIZE'].set(int(config['BASIC']['MapYSize']))
             self.settings['MAX_COLOR'].set(int(config['BASIC']['NumberOfPlayers']))
             self.settings['BOTS'].set(int(config['BASIC']['NumberOfBots']))
+            self.settings['FASTMODE'].set(config['BASIC']['BotFastMode'] == 'True')
             self.settings['DISCOVERABLE'].set(config['DISCOVERY']['EnableDiscovery'] == 'True')
             self.settings['NAME'].set(config['DISCOVERY']['DiscoveryServerName'])
             self.settings['PASSWORD'].set(config['DISCOVERY']['Password'])
@@ -758,8 +819,117 @@ IP = 0.0.0.0'''
         config['BASIC']['MapYSize'] = str(self.settings['YSIZE'].get())
         config['BASIC']['NumberOfPlayers'] = str(self.settings['MAX_COLOR'].get())
         config['BASIC']['NumberOfBots'] = str(self.settings['BOTS'].get())
+        config['BASIC']['BotFastMode'] = str(self.settings['FASTMODE'].get())
         config['DISCOVERY']['EnableDiscovery'] = str(self.settings['DISCOVERABLE'].get())
         config['DISCOVERY']['DiscoveryServerName'] = str(self.settings['NAME'].get())
         config['DISCOVERY']['Password'] = str(self.settings['PASSWORD'].get())
 
         with open('./integratedServer/config.ini','w') as f: config.write(f)
+
+class StatsWindow:
+
+    def __init__(self,mainWindow,current_stats) -> None:
+        
+        self.mainWindow = mainWindow
+        self.stats = current_stats
+
+        self.window = Toplevel(mainWindow)
+        self.window.title('Slay - Statistics')
+        self.window.iconbitmap('icon.ico')
+        self.window.resizable(False,False)
+        self.window.columnconfigure(0, weight=1)
+        self.window.rowconfigure(0, weight=1)
+        self.window.protocol("WM_DELETE_WINDOW", self.windowClosed)
+        self.window.bind("<Key-Escape>", self.windowClosed)
+        self.window.bind("<Command-.>", self.windowClosed)
+        # v1.1
+        '''
+        self.window.bind('<<EnableUI>>',self.EnableUI)
+        self.window.bind('<<DisableUI>>',self.DisableUI)
+        '''
+
+        self.mainframe = ttk.Frame(self.window,padding="20 10 20 8")
+        self.mainframe.grid(column=0, row=0, sticky=(N, W, E, S))
+
+        try: winLossRatio = round(self.stats['gamesWon']/(self.stats["gamesPlayed"]-self.stats['gamesWon']),2)
+        except ZeroDivisionError: winLossRatio = 'N/A'
+        longestGame = (self.stats['longestGame'])
+        totalTime = (int(self.stats['totalTime']//60),int(self.stats['totalTime']%60))
+
+        # v1.1
+        '''
+        self.ignText = ttk.Label(self.mainframe,text=f'In Game Name: {self.user.ign}')
+        self.ignText.grid(column=3,columnspan=2,row=2,pady=(16,0),sticky=(N))
+        '''
+        ttk.Label(self.mainframe,text='Statistics',font=('Helvetica',22),padding='60 0 60 15').grid(column=3,columnspan=2,row=2,pady=(16,0),sticky=(N))
+        ttk.Label(self.mainframe,text=f'Total Games Played: {self.stats["gamesPlayed"]}').grid(column=3,columnspan=2,row=3,pady=(2,0),sticky=(N))
+        ttk.Label(self.mainframe,text=f'Total Games Won: {self.stats["gamesWon"]}').grid(column=3,columnspan=2,row=4,pady=(2,0),sticky=(N))
+        ttk.Label(self.mainframe,text=f'W/L Ratio: {winLossRatio}').grid(column=3,columnspan=2,row=5,pady=(2,0),sticky=(N))
+        ttk.Label(self.mainframe,text=f'Longest Game Played: {longestGame} Turns').grid(column=2,columnspan=4,row=6,pady=(2,0),sticky=(N))
+        ttk.Label(self.mainframe,text=f'Total Time spent playing: {totalTime[0]} Hours {totalTime[1]} Minutes').grid(column=2,columnspan=4,row=7,pady=(2,16),sticky=(N))
+
+        # v1.1
+        '''
+        self.changeIgnButton = ttk.Button(self.mainframe, text='Change In-Game Name', command=self.changeIgn, padding='2 2 2 2',width=30)
+        self.changeIgnButton.grid(column=4,row=8,columnspan=2,sticky=(W))
+
+    def updateFields(self) -> None:
+        self.ignText.configure(text=f'In Game Name: {self.user.ign}')
+
+    def changeIgn(self) -> None:
+        self.window.event_generate('<<DisableUI>>')
+        UpdateInfoWindow(self.window,'In-Game Name',self.user,self.updateFields)
+    
+    def DisableUI(self,x=None):
+        self.disabled = True
+        self.changeIgnButton.configure(state='disabled')
+        self.window.update_idletasks()
+
+    def EnableUI(self,x=None):
+        self.disabled = False
+        self.changeIgnButton.configure(state='enabled')
+        self.window.update_idletasks()'''
+
+    def windowClosed(self,e=None) -> None:
+        self.mainWindow.event_generate('<<EnableUI>>')
+        self.window.destroy()
+
+# v1.1
+'''class UpdateInfoWindow:
+
+    def __init__(self,master_window,text,setter,callback) -> None:
+        self.master_window = master_window
+        self.text = text
+        self.setter = setter
+        self.callback = callback
+
+        self.window = Toplevel(master_window)
+        self.window.title(f'Slay - Update {self.text}')
+        self.window.iconbitmap('icon.ico')
+        self.window.resizable(False,False)
+        self.window.columnconfigure(0, weight=1)
+        self.window.rowconfigure(0, weight=1)
+        self.window.protocol("WM_DELETE_WINDOW", self.windowClosed)
+
+        self.mainframe = ttk.Frame(self.window,padding="3 3 12 12")
+        self.mainframe.grid(column=0, row=0, sticky=(N, W, E, S))
+
+        ttk.Label(self.mainframe,text=f'Change {self.text}',font=('Helvetica',16),padding='50 25 50 15').grid(column=1,row=1,columnspan=6)
+        
+        ttk.Label(self.mainframe,text=f'Enter New {self.text}').grid(column=1,columnspan=2,row=2,pady=(16,0),sticky=(N))
+        self.newItemField = ttk.Entry(self.mainframe)
+        self.newItemField.grid(column=3,columnspan=4,row=2,pady=(16,0),sticky=(N))
+        
+        self.buttonFrame = ttk.Frame(self.mainframe)
+        self.buttonFrame.grid(column=1,columnspan=6,row=4,pady=(16,0),sticky=(N))
+        ttk.Button(self.buttonFrame,text='Update',command=self.update,width=15).grid(column=1,row=1,sticky=(E))
+        ttk.Button(self.buttonFrame,text='Cancel',command=self.windowClosed,width=15).grid(column=2,row=1,sticky=(W))
+
+    def windowClosed(self) -> None:
+        self.master_window.event_generate('<<EnableUI>>')
+        self.window.destroy()
+
+    def update(self) -> None:
+        self.setter(self.newItemField.get())
+        self.callback()
+        self.windowClosed()'''

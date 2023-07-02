@@ -96,6 +96,7 @@ def main():
                                     {'error':f'{player} disconnected'}
                                 ))
                             except Exception: pass
+                        server_socket.close()
                         return(f'Known Disconnect by {player}, {addr}! Shutting down...')
                     except Exception as err:
                         print(err)
@@ -106,6 +107,7 @@ def main():
                                     {'error':f'Fatal Server Error'}
                                 ))
                             except Exception: pass
+                            server_socket.close()
                         return(f'Fatal Error! Shutting down...')              
 
         # Send initial grid to connections
@@ -124,6 +126,7 @@ def main():
                     {'error':f'Server Shutdown Command'}
                 ))
             except Exception: pass
+            server_socket.close()
         raise KeyboardInterrupt
 
     try:
@@ -166,8 +169,13 @@ def main():
 
                                 while turn < len(activePlayers) and activePlayers[turn]>MAX_CLIENTS:
                                     broadcast(connections,Packet(Packet.PLAY,{'turn':activePlayers[turn]}))
-                                    movePacket = AI_Player.play(serverside_grid,activePlayers[turn],turn)
-                                    broadcast(connections,movePacket)
+
+                                    if FASTMODE:
+                                        movePacket = AI_Player.playFast(serverside_grid,activePlayers[turn],turn)
+                                        broadcast(connections,movePacket)
+                                    else:
+                                        for move in AI_Player.play(serverside_grid,activePlayers[turn],turn): broadcast(connections,move)
+
                                     turn += 1
 
                                 if turn == len(activePlayers): 
@@ -211,6 +219,7 @@ def main():
                 ))
             except Exception: pass
 
+        server_socket.close()
         return err
 
     except PlayerDisconnectException as err:
@@ -224,6 +233,8 @@ def main():
                     {'error':f'{player} disconnected'}
                 ))
             except Exception: pass
+        server_socket.close()
+        return err
 
     except GameOver as err:
         print(f'Player {err} won!, Shutting down...')
@@ -237,6 +248,7 @@ def main():
                     {'error':'Server Shutdown Command'}
                 ))
             except Exception: pass
+        server_socket.close()
         raise KeyboardInterrupt
 
     except BaseException as err:
@@ -250,8 +262,10 @@ def main():
                     {'error':err}
                 ))
             except Exception: pass
+        server_socket.close()
         return err
 
+    server_socket.close()
     return 0
 
 if __name__ == '__main__':

@@ -18,6 +18,9 @@ MapYSize = 15
 NumberOfPlayers = 2
 NumberofBots = 0
 
+# Whether bots play all their moves at once, or they play their moves slowly (1 by 1)
+BotFastMode = False
+
 # Automatically-Relaunch server every time game ends/crashes
 AutoReboot = False
 
@@ -48,6 +51,7 @@ try:
     YSIZE = int(config['BASIC']['MapYSize'])+1
     MAX_COLOR = int(config['BASIC']['NumberOfPlayers'])
     BOTS = int(config['BASIC']['NumberOfBots'])
+    FASTMODE = config['BASIC']['BotFastMode'] == 'True'
     if BOTS >= MAX_COLOR: raise Exception('Too many bots!')
     AUTOREBOOT = config['BASIC']['AutoReboot'] == 'True'
     IP = config['ADVANCED']['IP']

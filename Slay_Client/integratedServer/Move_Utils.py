@@ -48,3 +48,5 @@ class Move: # just a data struct
         self.preanimation = preanim
         self.animation = anim
         self.postanimation = postanim
+        self.preanimated = False
+        self.animated = (anim is not None)

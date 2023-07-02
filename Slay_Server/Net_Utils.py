@@ -4,6 +4,8 @@ import time
 from Constants import PORT, DISCOVERABLE, NAME, PUBLIC, MAX_COLOR,BOTS
 
 HEADERSIZE = 16
+# TEMP 
+packetcount = 1
 
 def send_message(socket,msg):
     msg = pickle.dumps(msg)
@@ -28,6 +30,10 @@ def recieve_message(socket,debug=True):
     return pickle.loads(msg)
 
 def broadcast(connections,message):
+    #TEMP
+    global packetcount
+    message.count = packetcount
+    packetcount += 1
     for addr,conn in connections.items():
         send_message(conn,message)
 
@@ -59,7 +65,9 @@ class Packet:
     CONNECT = 11       # Request to connect, Password-Carrying packet
     SERVERINFO = 12 # Request data related to server
 
-    def __init__(self,code,data={}):
+    def __init__(self,code,data={},count=0):
+        #TEMP
+        self.count = count
         self.code = code
         self.data = data
 

@@ -147,10 +147,10 @@ def drawEntities(screen :pygame.Surface, grid, beat: int, color: int):
         for x in range(0,len(grid)):
             if grid[x][y].entity:
                 if (y%2==1):
-                    if beat and grid[x][y].playable and grid[x][y].color == color: screen.blit(entities[grid[x][y].entity],((x+0.5)*48,(y*36)+1))
+                    if is_our_turn() and beat and grid[x][y].playable and grid[x][y].color == color: screen.blit(entities[grid[x][y].entity],((x+0.5)*48,(y*36)+1))
                     else: screen.blit(entities[grid[x][y].entity],((x+0.5)*48,(y*36)-1))
                 else:
-                    if beat and grid[x][y].playable and grid[x][y].color == color: screen.blit(entities[grid[x][y].entity],(x*48,(y*36)+1))
+                    if is_our_turn() and beat and grid[x][y].playable and grid[x][y].color == color: screen.blit(entities[grid[x][y].entity],(x*48,(y*36)+1))
                     else: screen.blit(entities[grid[x][y].entity],(x*48,(y*36)-1))
     return
 
@@ -184,9 +184,9 @@ def drawDebugger(screen :pygame.Surface, grid, debug_pos, WINDOWY, WINDOWX):
 
     #Highlight cell
     if debug_pos[1]%2==1:
-        screen.blit(debugOverlay,((debug_pos[0]+0.5)*48,debug_pos[1]*36))
+        screen.blit(debugOverlay[0],((debug_pos[0]+0.5)*48,debug_pos[1]*36))
     else:
-        screen.blit(debugOverlay,(debug_pos[0]*48,debug_pos[1]*36))
+        screen.blit(debugOverlay[0],(debug_pos[0]*48,debug_pos[1]*36))
 
     # Writing out the actual info
     screen.blit(roboto.render(f'Position: {debug_pos}',True,(255,255,255)),(50,WINDOWY+20))
